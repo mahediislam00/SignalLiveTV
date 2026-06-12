@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#04060a">
+<title>SIGNAL — Global Live TV</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%227%22%20fill%3D%22%2304060a%22%2F%3E%3Crect%20x%3D%224.5%22%20y%3D%227.5%22%20width%3D%2223%22%20height%3D%2217%22%20rx%3D%222.5%22%20fill%3D%22none%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.08)%22%2F%3E%3CclipPath%20id%3D%22b%22%3E%3Crect%20x%3D%225%22%20y%3D%228%22%20width%3D%2222%22%20height%3D%2216%22%20rx%3D%222%22%2F%3E%3C%2FclipPath%3E%3Cg%20clip-path%3D%22url(%23b)%22%3E%3Crect%20x%3D%225%22%20y%3D%228%22%20width%3D%223.3%22%20height%3D%2216%22%20fill%3D%22%23c0c0c0%22%2F%3E%3Crect%20x%3D%228.14%22%20y%3D%228%22%20width%3D%223.3%22%20height%3D%2216%22%20fill%3D%22%23c0c000%22%2F%3E%3Crect%20x%3D%2211.29%22%20y%3D%228%22%20width%3D%223.3%22%20height%3D%2216%22%20fill%3D%22%2300c0c0%22%2F%3E%3Crect%20x%3D%2214.43%22%20y%3D%228%22%20width%3D%223.3%22%20height%3D%2216%22%20fill%3D%22%2300c000%22%2F%3E%3Crect%20x%3D%2217.57%22%20y%3D%228%22%20width%3D%223.3%22%20height%3D%2216%22%20fill%3D%22%23c000c0%22%2F%3E%3Crect%20x%3D%2220.71%22%20y%3D%228%22%20width%3D%223.3%22%20height%3D%2216%22%20fill%3D%22%23c00000%22%2F%3E%3Crect%20x%3D%2223.86%22%20y%3D%228%22%20width%3D%223.3%22%20height%3D%2216%22%20fill%3D%22%230000c0%22%2F%3E%3C%2Fg%3E%3Crect%20x%3D%2214%22%20y%3D%2226%22%20width%3D%224%22%20height%3D%222.5%22%20rx%3D%221.25%22%20fill%3D%22%23ffb000%22%2F%3E%3C%2Fsvg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js"></script>
+<style>
+  :root {
+    --bg: #04060a;
+    --bg-2: #070a10;
+    --text: #eef2f8;
+    --muted: #8595aa;
+    --amber: #ffb000;
+    --red: #ff453a;
+    --green: #2bd576;
+    --radius: 16px;
+
+    /* Glass tokens — darker, deeper, more refined */
+    --glass: rgba(12, 16, 23, .62);
+    --glass-2: rgba(22, 29, 40, .55);
+    --glass-3: rgba(34, 45, 61, .5);
+    --stroke: rgba(255, 255, 255, .06);
+    --stroke-strong: rgba(255, 255, 255, .13);
+    --hi: rgba(255, 255, 255, .05);   /* top-edge highlight for glass */
+    --blur: blur(26px) saturate(155%);
+    --shadow: 0 18px 50px rgba(0, 0, 0, .6), 0 2px 0 var(--hi) inset;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow-x: hidden; }
+  body {
+    color: var(--text);
+    font-family: "Poppins", system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* main overflow kept for layout */
+    background:
+      radial-gradient(900px 480px at 6% -10%, rgba(255, 176, 0, .07), transparent 60%),
+      radial-gradient(820px 620px at 106% 114%, rgba(43, 120, 213, .09), transparent 55%),
+      radial-gradient(640px 520px at 50% 50%, rgba(43, 213, 118, .025), transparent 60%),
+      var(--bg);
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--stroke);
+    background: var(--glass);
+    -webkit-backdrop-filter: var(--blur);
+    backdrop-filter: var(--blur);
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  .brand {
+    font-family: "Poppins", system-ui, sans-serif;
+    font-weight: 700;
+    font-size: 25px;
+    letter-spacing: .5px;
+    line-height: 1;
+    color: var(--text);
+    text-transform: uppercase;
+  }
+  .brand span { color: var(--amber); }
+  /* SMPTE color-bar strip — the signature mark */
+  .bars {
+    display: flex;
+    height: 26px;
+    width: 110px;
+    border-radius: 5px;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .4), inset 0 0 0 1px rgba(255, 255, 255, .08);
+  }
+  .bars i { flex: 1; }
+  .bars i:nth-child(1){background:#c0c0c0}
+  .bars i:nth-child(2){background:#c0c000}
+  .bars i:nth-child(3){background:#00c0c0}
+  .bars i:nth-child(4){background:#00c000}
+  .bars i:nth-child(5){background:#c000c0}
+  .bars i:nth-child(6){background:#c00000}
+  .bars i:nth-child(7){background:#0000c0}
+  .tagline {
+    font-family: "Poppins", system-ui, sans-serif;
+    font-size: 11px;
+    color: var(--muted);
+    margin-left: auto;
+    text-align: right;
+  }
+  .tagline b { color: var(--amber); font-weight: 500; }
+
+  /* ---------- Ad banner ---------- */
+  .adbar {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--stroke);
+    background: var(--glass);
+    -webkit-backdrop-filter: var(--blur);
+    backdrop-filter: var(--blur);
+    overflow: hidden;
+  }
+  .adslot { width: 468px; height: 60px; flex-shrink: 0; }
+
+  /* ---------- Layout ---------- */
+  main { display: flex; flex: 1; min-height: 0; padding: 14px; gap: 14px; }
+  aside {
+    width: 360px;
+    min-width: 280px;
+    border: 1px solid var(--stroke);
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, var(--hi), transparent 90px), var(--glass);
+    -webkit-backdrop-filter: var(--blur);
+    backdrop-filter: var(--blur);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .filters {
+    padding: 14px;
+    display: grid;
+    gap: 10px;
+    border-bottom: 1px solid var(--stroke);
+  }
+  .scope { display: flex; gap: 8px; }
+  .pill {
+    flex: 1;
+    background: var(--glass-2);
+    border: 1px solid var(--stroke);
+    color: var(--muted);
+    border-radius: 9px;
+    padding: 8px 10px;
+    font-family: "Poppins", system-ui, sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .pill:hover { border-color: var(--stroke-strong); color: var(--text); }
+  .pill.active {
+    background: linear-gradient(180deg, rgba(255, 176, 0, .22), rgba(255, 176, 0, .10));
+    border-color: rgba(255, 176, 0, .5);
+    color: var(--amber);
+  }
+  /* FIFA World Cup — headline section pill */
+  .fifa-pill {
+    width: 100%;
+    flex: none;
+    font-weight: 600;
+    letter-spacing: .2px;
+    padding: 11px 12px;
+  }
+  .fifa-pill.active {
+    background: linear-gradient(180deg, rgba(43, 213, 118, .26), rgba(43, 213, 118, .08));
+    border-color: rgba(43, 213, 118, .55);
+    color: var(--green);
+    box-shadow: 0 0 0 1px rgba(43, 213, 118, .12), 0 6px 22px rgba(43, 213, 118, .14);
+  }
+  .filters input, .filters select {
+    width: 100%;
+    background: var(--glass-2);
+    border: 1px solid var(--stroke);
+    color: var(--text);
+    border-radius: 9px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .filters select { cursor: pointer; }
+  .filters input::placeholder { color: var(--muted); }
+  .filters input:focus, .filters select:focus { border-color: var(--amber); }
+  .filters .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .count {
+    font-family: "Poppins", system-ui, sans-serif;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--stroke);
+    letter-spacing: .3px;
+  }
+
+  /* ---------- Channel list (virtualized) ---------- */
+  #list { flex: 1; overflow-y: auto; position: relative; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  #list::-webkit-scrollbar { width: 9px; }
+  #list::-webkit-scrollbar-track { background: transparent; }
+  #list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .12); border-radius: 5px; }
+  #list::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, .2); }
+  #vp { position: relative; width: 100%; }
+  .ch {
+    position: absolute;
+    left: 0; right: 0;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 14px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, .04);
+    transition: background .12s;
+  }
+  .ch:hover { background: rgba(255, 255, 255, .045); }
+  .ch.dim { opacity: .5; }
+  .ch.dim:hover { opacity: .72; }
+  .ch.active {
+    background: linear-gradient(90deg, rgba(255, 176, 0, .14), rgba(255, 176, 0, .02));
+    box-shadow: inset 3px 0 0 var(--amber);
+  }
+  .thumb {
+    width: 44px; height: 44px;
+    border-radius: 9px;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, .92);
+    border: 1px solid var(--stroke);
+  }
+  .thumb img {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .thumb .femoji {
+    display: none;
+    position: absolute; inset: 0;
+    align-items: center; justify-content: center;
+    font-size: 22px;
+    background: var(--glass-3);
+  }
+  .thumb.noimg { background: var(--glass-3); }
+  .thumb.noimg .femoji { display: flex; }
+  .ch .meta { min-width: 0; flex: 1; }
+  .ch .name {
+    font-size: 13.5px; font-weight: 600;
+    display: flex; align-items: center; gap: 7px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .ch .name .ne { font-size: 14px; flex-shrink: 0; }
+  .ch .name .nt { overflow: hidden; text-overflow: ellipsis; }
+  .ch .sub {
+    font-family: "Poppins", system-ui, sans-serif;
+    font-size: 10.5px; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-top: 3px;
+  }
+  .empty {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 40px 28px;
+    font-family: "Poppins", system-ui, sans-serif;
+    font-size: 12px; color: var(--muted); line-height: 1.7;
+  }
+
+  /* ---------- Player ---------- */
+  .stage {
+    flex: 1; display: flex; flex-direction: column; min-width: 0;
+    border: 1px solid var(--stroke);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: linear-gradient(180deg, var(--hi), transparent 90px), var(--glass);
+    box-shadow: var(--shadow);
+  }
+  .screen {
+    flex: 1;
+    background: #000;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+  video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+
+  /* External-embed channels (load a player page in an iframe) */
+  .embedframe {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    border: 0;
+    background: #000;
+    display: none;
+    z-index: 6;
+  }
+  .embedframe.show { display: block; }
+
+  /* CSS-based fullscreen for embeds — reliable on mobile, where the iframe
+     Fullscreen API is unsupported. Fills the whole viewport. */
+  .embedframe.cssfs {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 99990;
+  }
+  .embed-exit {
+    position: fixed;
+    top: max(10px, env(safe-area-inset-top, 0px));
+    right: max(10px, env(safe-area-inset-right, 0px));
+    z-index: 99999;
+    display: none;
+    width: 42px; height: 42px;
+    align-items: center; justify-content: center;
+    font-size: 17px; line-height: 1;
+    color: #fff;
+    background: rgba(8, 11, 16, .82);
+    border: 1px solid var(--stroke-strong);
+    border-radius: 50%;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    cursor: pointer;
+  }
+  .embed-exit.show { display: inline-flex; }
+
+  /* Idle test-pattern (SMPTE bars) */
+  .idle {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+  }
+  .idle .big { flex: 3; display: flex; }
+  .idle .big i { flex: 1; }
+  .idle .big i:nth-child(1){background:#c0c0c0}
+  .idle .big i:nth-child(2){background:#c0c000}
+  .idle .big i:nth-child(3){background:#00c0c0}
+  .idle .big i:nth-child(4){background:#00c000}
+  .idle .big i:nth-child(5){background:#c000c0}
+  .idle .big i:nth-child(6){background:#c00000}
+  .idle .big i:nth-child(7){background:#0000c0}
+  .idle .strip { flex: 1; background: #0c0c0c; display: flex; align-items: center; justify-content: center; }
+  .idle .strip p {
+    font-family: "Poppins", system-ui, sans-serif;
+    font-size: 13px; color: var(--muted);
+    text-align: center; padding: 0 24px; line-height: 1.7;
+  }
+  .idle .strip b { color: var(--amber); font-weight: 500; }
+
+  .overlay {
+    position: absolute; inset: 0;
+    display: none;
+    align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px;
+    background: rgba(0, 0, 0, .68);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    font-family: "Poppins", system-ui, sans-serif;
+    text-align: center; padding: 20px;
+  }
+  .overlay.show { display: flex; }
+  .overlay .title { font-size: 15px; color: var(--text); letter-spacing: 1px; }
+  .overlay .hint { font-size: 12px; color: var(--muted); line-height: 1.6; max-width: 420px; }
+  .overlay button {
+    margin-top: 6px; padding: 9px 20px;
+    background: var(--amber); color: #1a1200;
+    border: none; border-radius: 8px;
+    font-family: inherit; font-size: 12px; font-weight: 500;
+    cursor: pointer;
+  }
+  .overlay button:hover { filter: brightness(1.08); }
+  #playBtn {
+    width: 80px; height: 80px; margin: 0;
+    padding: 0 0 0 6px;            /* optical centering of the ▶ glyph */
+    border-radius: 50%;
+    background: var(--amber); color: #1a1200;
+    border: none; font-size: 30px; line-height: 1; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, .55);
+    transition: transform .12s, filter .12s;
+  }
+  #playBtn:hover { filter: brightness(1.08); transform: scale(1.06); }
+  #playBtn:active { transform: scale(.98); }
+  .spinner {
+    width: 34px; height: 34px;
+    border: 3px solid rgba(255, 255, 255, .15);
+    border-top-color: var(--amber);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Now playing bar */
+  .nowbar {
+    flex-shrink: 0;
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 18px;
+    background: var(--glass);
+    -webkit-backdrop-filter: var(--blur);
+    backdrop-filter: var(--blur);
+    border-top: 1px solid var(--stroke);
+    min-height: 60px;
+  }
+  .onair {
+    display: none;
+    align-items: center; gap: 7px;
+    font-family: "Poppins", system-ui, sans-serif;
+    font-size: 16px; letter-spacing: 2px;
+    color: var(--red);
+  }
+  .onair.live { display: flex; }
+  .onair .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--red);
+    box-shadow: 0 0 10px var(--red);
+    animation: pulse 1.4s infinite;
+  }
+  @keyframes pulse { 50% { opacity: .25; } }
+  .nowicon { font-size: 22px; flex-shrink: 0; }
+  .nowmeta { min-width: 0; flex: 1; }
+  .nowname { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nowsub { font-family: "Poppins", system-ui, sans-serif; font-size: 11px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nowbar .right { margin-left: auto; display: flex; gap: 8px; }
+  .nowbar button {
+    background: var(--glass-2); border: 1px solid var(--stroke);
+    color: var(--text); border-radius: 8px;
+    padding: 8px 13px; font-family: "Poppins", system-ui, sans-serif;
+    font-size: 11px; cursor: pointer; transition: border-color .15s;
+  }
+  .nowbar button:hover { border-color: var(--amber); }
+
+  /* Loading screen */
+  #boot {
+    position: fixed; inset: 0; z-index: 50;
+    background:
+      radial-gradient(820px 460px at 8% -8%, rgba(255, 176, 0, .12), transparent 60%),
+      radial-gradient(760px 600px at 104% 112%, rgba(43, 120, 213, .14), transparent 55%),
+      var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 18px;
+  }
+  #boot .brand { font-size: 48px; }
+  #boot p { font-family: "Poppins", system-ui, sans-serif; font-size: 12px; color: var(--muted); text-align: center; max-width: 460px; line-height: 1.7; padding: 0 20px; }
+
+  @media (max-width: 760px) {
+    /* The whole page scrolls on mobile; the player stays pinned up top. */
+    html { overflow-y: auto; }
+    body { display: block; height: auto; min-height: 100dvh; overflow-x: hidden; overflow-y: visible; }
+
+    header {
+      padding: 10px 14px;
+      padding-top: calc(10px + env(safe-area-inset-top));
+    }
+    .brand { font-size: 22px; }
+    .bars { width: 84px; height: 22px; }
+    .tagline { display: none; }
+
+    main {
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px;
+      padding-left: calc(10px + env(safe-area-inset-left));
+      padding-right: calc(10px + env(safe-area-inset-right));
+      padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    }
+
+    /* Player + now-bar pin to the top so you can keep watching while you browse */
+    .stage { order: 1; flex: none; position: sticky; top: 0; z-index: 5; }
+    .screen { flex: none; width: 100%; aspect-ratio: 16 / 9; }
+
+    /* Channel guide flows in normal page flow; the window scrolls it */
+    aside { order: 2; width: 100%; min-width: 0; flex: none; overflow: visible; }
+    #list { overflow: visible; flex: none; }
+
+    .filters { padding: 12px; gap: 9px; }
+    /* 16px stops iOS from auto-zooming the page when an input gets focus */
+    .filters input, .filters select { font-size: 16px; padding: 11px 12px; }
+    .pill { font-size: 12.5px; padding: 9px 10px; }
+    .fifa-pill { font-size: 13.5px; padding: 12px; }
+
+    .count { padding: 8px 14px; }
+    .nowbar { padding: 10px 12px; gap: 10px; min-height: 56px; }
+    .nowbar button { padding: 9px 12px; }
+    .onair { font-size: 14px; }
+    #playBtn { width: 66px; height: 66px; font-size: 25px; }
+    #boot .brand { font-size: 40px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .spinner, .onair .dot { animation: none; }
+    * { transition: none !important; }
+  }
+  /* Shrink the fixed-width banner so it never overflows narrow phones */
+  @media (max-width: 500px) {
+    .adbar { padding: 6px 8px; }
+    .adslot { transform: scale(.66); transform-origin: center; }
+  }
+
+  /* ---------- (bottom-left widget removed) ---------- */
+
+</style>
+
+<!-- Single-pop, time-capped pop-under controller.
+     OFF while the page first loads. Then:
+       1) opens a 2-second window at 20s after load  -> at most 1 pop (ad #1)
+       2) never again this visit (1 pop total).
+     The script is never armed/active for more than 2 seconds.
+
+     Mechanism: every pop-under ends up calling window.open(). We wrap it and
+     only let a pop through while the window is armed, once. The page's
+     own new-tab channels pass "noopener" and are always allowed (not counted).
+     Counters are in memory, so a page reload starts the one-pop budget over.  -->
+<script>
+(function () {
+  var POP_SRC        = "https://pl29706296.effectivecpmnetwork.com/9c/4c/4c/9c4c4cdffb2ec69dd4c58c89dfcc42ae.js";
+  var FIRST_DELAY_MS = 20000;   // the one window opens 20s after load
+  var ACTIVE_MS      = 2000;    // the window stays active at most 2 seconds
+  var MAX_WINDOWS    = 1;       // one ad total, then never again
+
+  var armed = false, firedInWin = false, windowsOpened = 0, activeTimer = null;
+
+  // --- Single chokepoint: gate window.open -------------------------------
+  var nativeOpen = window.open ? window.open.bind(window) : null;
+  window.open = function (url, name, features) {
+    // The page's own new-tab channels pass "noopener" — always allow, never count.
+    if (/noopener/i.test(String(features || ""))) {
+      return nativeOpen ? nativeOpen(url, name, features) : null;
+    }
+    // Otherwise it's a pop-under attempt.
+    if (!armed || firedInWin) return null;   // window closed -> swallow it
+    firedInWin = true;                       // one pop per window
+    return nativeOpen ? nativeOpen(url, name, features) : null;
+  };
+
+  function openWindow() {
+    if (windowsOpened >= MAX_WINDOWS) return;
+    windowsOpened++;
+    armed = true;
+    firedInWin = false;
+    // Hard 2-second cap on how long the script can be active, click or not.
+    clearTimeout(activeTimer);
+    activeTimer = setTimeout(closeWindow, ACTIVE_MS);
+  }
+
+  function closeWindow() {
+    if (!armed) return;
+    armed = false;
+    clearTimeout(activeTimer);
+    // One pop per visit — nothing more is scheduled.
+  }
+
+  // Load the pop-under script once so its handler is ready (it can only pop
+  // through the gate above).
+  function loadPopScript() {
+    var s = document.createElement("script");
+    s.src = POP_SRC;
+    s.async = true;
+    (document.body || document.documentElement).appendChild(s);
+  }
+
+  function start() {
+    loadPopScript();
+    setTimeout(openWindow, FIRST_DELAY_MS);
+  }
+
+  // Start only after the page has fully finished loading.
+  if (document.readyState === "complete") {
+    start();
+  } else {
+    window.addEventListener("load", start);
+  }
+})();
+</script>
+</head>
+<body>
+
+<div id="boot">
+  <div class="bars" style="width:170px;height:38px"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="brand">SIG<span>NAL</span></div>
+  <p id="bootmsg">Tuning the satellite dish…</p>
+</div>
+
+<header>
+  <div class="bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="brand">SIG<span>NAL</span></div>
+  <div class="tagline">PUBLIC FREE-TO-AIR STREAMS · <b id="totalCount">0</b> CHANNELS · DATA: IPTV-ORG</div>
+</header>
+
+<div class="adbar" aria-label="Advertisement">
+  <div class="adslot">
+    <script type="text/javascript">
+      atOptions = {
+        'key' : '21445b476db0967172fffa7cd03a9dc9',
+        'format' : 'iframe',
+        'height' : 60,
+        'width' : 468,
+        'params' : {}
+      };
+    </script>
+    <script type="text/javascript" src="https://www.highperformanceformat.com/21445b476db0967172fffa7cd03a9dc9/invoke.js"></script>
+  </div>
+</div>
+
+<main>
+  <aside>
+    <div class="filters">
+      <button class="pill fifa-pill active" data-scope="fifa">⚽ FIFA World Cup — Live</button>
+      <div class="scope">
+        <button class="pill" data-scope="bd">🇧🇩 Bangladesh</button>
+        <button class="pill" data-scope="all">🌐 All channels</button>
+      </div>
+      <input id="search" type="text" placeholder="Search channels…" autocomplete="off">
+      <div class="row">
+        <select id="country"><option value="">All countries</option></select>
+        <select id="category"><option value="">All categories</option></select>
+      </div>
+    </div>
+    <div class="count" id="filterCount">—</div>
+    <div id="list"><div id="vp"></div></div>
+  </aside>
+
+  <div class="stage">
+    <div class="screen">
+      <video id="video" controls playsinline></video>
+      <iframe id="embedFrame" class="embedframe"
+        allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+        allowfullscreen referrerpolicy="no-referrer-when-downgrade"
+        title="External channel embed"></iframe>
+      <button id="embedExit" class="embed-exit" aria-label="Exit fullscreen">✕</button>
+      <div class="idle" id="idle">
+        <div class="big"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="strip"><p><b>NO CHANNEL SELECTED</b><br>Pick a channel from the guide to start watching.<br>These are publicly available free-to-air streams; some go offline — if one fails, try another.</p></div>
+      </div>
+      <div class="overlay" id="playOverlay">
+        <button id="playBtn" aria-label="Play channel">▶</button>
+        <div class="hint" id="playHint">Press play to start watching</div>
+      </div>
+      <div class="overlay" id="loadingOverlay"><div class="spinner"></div><div class="hint">Acquiring signal…</div></div>
+      <div class="overlay" id="errorOverlay">
+        <div class="title">⚠ SIGNAL LOST</div>
+        <div class="hint" id="errorHint">This stream appears to be offline or geo-blocked.</div>
+        <button id="retryBtn">Try next source</button>
+      </div>
+    </div>
+    <div class="nowbar">
+      <div class="onair" id="onair"><span class="dot"></span>ON AIR</div>
+      <div class="nowicon" id="nowIcon">📺</div>
+      <div class="nowmeta">
+        <div class="nowname" id="nowName">Nothing playing</div>
+        <div class="nowsub" id="nowSub">Select a channel from the guide</div>
+      </div>
+      <div class="right">
+        <button id="srcBtn" style="display:none">Next source</button>
+        <button id="fsBtn">Fullscreen</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const M3U_URL = "https://iptv-org.github.io/iptv/index.m3u";
+const $ = id => document.getElementById(id);
+
+let channels = [];        // all joined channel records
+let bangladesh = [];      // Bangladesh channels
+let fifa = [];            // curated FIFA World Cup channels (shown by default)
+let filtered = [];        // current visible set
+let hls = null;
+let current = null;        // current channel
+let srcIndex = 0;          // active stream url index
+let embedActive = false;   // true while an iframe-embed channel is showing
+let scope = "fifa";        // 'fifa' | 'bd' | 'all'
+
+/* Curated FIFA World Cup broadcasters — exactly 6, in display order.
+   Each is resolved against the live guide by name keywords at boot.
+   `firstSource` (optional) promotes that 0-based stream index to the
+   front, so e.g. firstSource:1 plays the second source first. */
+const FIFA_SPEC = [
+  // Broadcaster channels removed — only curated embed channels appear in the FIFA section.
+];
+
+/* Curated embed channels — these load an external player page in an iframe
+   instead of an iptv-org HLS stream. They are prepended to the channel list. */
+const EMBED_CHANNELS = [
+  {
+    id: "embed:ntvs-canada-bosnia",
+    name: "Canada vs Bosnia",
+    country: "CA",
+    countryName: "Canada",
+    flag: "🇨🇦",
+    categories: ["sports"],
+    logo: "",
+    streams: [],
+    embedUrl: "https://ntvs.cx/embed?t=U3kvVGsxU1RSbFNVNzYraHQ0eDVFWktGeGVzQkNwSHdpdVRML1F2aWtWSXl2ejBReHNlWWJDTnFoMWhrbFQ3ZTFRTlVMWkJERWwwbTBaN2F0VGtzTWc9PQ~~",
+    pop: 10000,
+  },
+  {
+    id: "embed:las-estrellas-mx",
+    name: "Las Estrellas",
+    country: "MX",
+    countryName: "Mexico",
+    flag: "🇲🇽",
+    categories: ["general"],
+    logo: "",
+    streams: [],
+    embedUrl: "https://famelack.com/tv/mx/hSjFJVIKV0TRAc",
+    pop: 9999,
+  },
+  {
+    id: "embed:movielinkbd-livetv",
+    name: "MovieLinkBD Live TV",
+    country: "BD",
+    countryName: "Bangladesh",
+    flag: "🇧🇩",
+    categories: ["sports"],
+    logo: "",
+    streams: [],
+    embedUrl: "http://g84wmu.movielinkbd.li/livetv",
+    newTab: true,
+    pop: 9998,
+  },
+];
+
+/* ---------- Emoji maps ---------- */
+const CAT_EMOJI = {
+  news: "📰", sports: "⚽", movies: "🎬", music: "🎵", kids: "🧸",
+  documentary: "🎥", business: "💼", weather: "🌦️", general: "📺",
+  entertainment: "🎭", lifestyle: "🌿", comedy: "😂", education: "🎓",
+  science: "🔬", animation: "🎨", auto: "🚗", classic: "🎞️",
+  cooking: "🍳", culture: "🏛️", family: "👨‍👩‍👧", legislative: "🏛️",
+  outdoor: "🏕️", relax: "🧘", series: "📽️", shop: "🛍️",
+  travel: "✈️", religious: "🛐"
+};
+function catEmoji(c) {
+  for (const cat of (c.categories || [])) {
+    if (CAT_EMOJI[cat]) return CAT_EMOJI[cat];
+  }
+  return "📺";
+}
+
+/* Curated globally-recognizable brands, most prominent first.
+   A channel's popularity score = weight of the best-matching keyword. */
+const POPULAR_KEYWORDS = [
+  "bbc news", "cnn", "al jazeera", "sky news", "bloomberg", "cnbc", "euronews",
+  "france 24", "dw", "cgtn", "reuters", "abc news", "cbs news", "nbc news",
+  "fox news", "msnbc", "rt", "nhk", "trt", "cna", "channel news asia", "i24",
+  "espn", "eurosport", "sky sports", "bein", "fox sports", "red bull tv",
+  "hbo", "mtv", "comedy central", "cartoon network", "nickelodeon", "disney",
+  "discovery", "national geographic", "nat geo", "history", "animal planet",
+  "tlc", "food network", "vh1", "boomerang", "nasa", "arirang",
+  "bbc one", "bbc two", "itv", "cbc", "pbs", "tnt", "tbs",
+  "fox", "cbs", "nbc", "abc"
+];
+function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+const POP_REGEX = POPULAR_KEYWORDS.map((kw, i) => ({
+  re: new RegExp("\\b" + escapeRe(kw) + "\\b", "i"),
+  weight: POPULAR_KEYWORDS.length - i
+}));
+function popScore(name) {
+  for (const { re, weight } of POP_REGEX) if (re.test(name)) return weight;
+  return 0;
+}
+
+/* ---------- M3U playlist parsing ---------- */
+let REGION = null;
+try { REGION = new Intl.DisplayNames(["en"], { type: "region" }); } catch (e) {}
+
+function flagFromCC(cc) {
+  if (cc === "UK") cc = "GB";   // iptv-org uses 'uk'; GB gives the canonical flag
+  if (!cc || cc.length !== 2 || !/^[A-Z]{2}$/.test(cc)) return "🌐";
+  const A = 0x1F1E6, base = 65; // 'A'
+  return String.fromCodePoint(A + cc.charCodeAt(0) - base, A + cc.charCodeAt(1) - base);
+}
+function countryName(cc) {
+  if (!cc) return "Global";
+  try { return (REGION && REGION.of(cc)) || cc; } catch (e) { return cc; }
+}
+function ccFromId(id) {
+  if (!id) return "";
+  const baseId = id.split("@")[0];          // strip the feed suffix (@SD/@HD)
+  const dot = baseId.lastIndexOf(".");
+  if (dot < 0) return "";
+  const cc = baseId.slice(dot + 1).toUpperCase();
+  return /^[A-Z]{2}$/.test(cc) ? cc : "";
+}
+function cleanName(s) {
+  return (s || "")
+    .replace(/\s*\(\d{3,4}[ip]\)\s*/gi, " ")  // (1080p), (576i)…
+    .replace(/\s*\[[^\]]*\]/g, "")            // [Geo-blocked], [Not 24/7]…
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+function catsFromGroup(group) {
+  if (!group) return [];
+  return group.split(";")
+    .map(s => s.trim().toLowerCase())
+    .filter(g => g && g !== "undefined");
+}
+
+/* Parse the iptv-org index.m3u into the channel-record shape the app uses.
+   Multiple stream lines that share a tvg-id collapse into one channel with
+   several sources. */
+function parseM3U(text) {
+  const lines = text.split(/\r?\n/);
+  const byKey = new Map();
+  const attrRe = /([a-zA-Z0-9_-]+)="([^"]*)"/g;
+  let pending = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.startsWith("#EXTINF")) {
+      const attrs = {};
+      let m;
+      attrRe.lastIndex = 0;
+      while ((m = attrRe.exec(line))) attrs[m[1]] = m[2];
+      const comma = line.indexOf(",");
+      pending = { attrs, rawName: comma >= 0 ? line.slice(comma + 1).trim() : "" };
+    } else if (pending && line && line[0] !== "#") {
+      const url = line.trim();
+      const rawId = pending.attrs["tvg-id"] || "";
+      const cats = catsFromGroup(pending.attrs["group-title"]);
+      // Skip adult content defensively.
+      if (cats.some(c => c === "xxx" || c === "adult")) { pending = null; continue; }
+
+      const cc = ccFromId(rawId);
+      const name = cleanName(pending.rawName) || "Unknown channel";
+      const key = rawId
+        ? rawId.split("@")[0]
+        : "noid:" + cc + ":" + name.toLowerCase();
+
+      let ch = byKey.get(key);
+      if (!ch) {
+        ch = {
+          id: key,
+          name,
+          country: cc,
+          countryName: countryName(cc),
+          flag: flagFromCC(cc),
+          categories: cats,
+          logo: pending.attrs["tvg-logo"] || "",
+          streams: [],
+          pop: popScore(name),
+        };
+        byKey.set(key, ch);
+      }
+      if (ch.streams.length < 8) ch.streams.push(url);
+      if (!ch.logo && pending.attrs["tvg-logo"]) ch.logo = pending.attrs["tvg-logo"];
+      if ((!ch.categories || !ch.categories.length) && cats.length) ch.categories = cats;
+      pending = null;
+    }
+  }
+  return [...byKey.values()];
+}
+
+/* ---------- Boot: fetch & parse the playlist ---------- */
+async function boot() {
+  try {
+    $("bootmsg").textContent = "Downloading the global channel playlist… (a few MB, one moment)";
+    const res = await fetch(M3U_URL);
+    if (!res.ok) throw new Error("playlist request failed (" + res.status + ")");
+    const text = await res.text();
+
+    $("bootmsg").textContent = "Indexing channels…";
+    channels = parseM3U(text).sort((a, b) => a.name.localeCompare(b.name));
+    if (!channels.length) throw new Error("no channels parsed from playlist");
+
+    // Prepend curated iframe-embed channels so they're searchable & filterable.
+    channels = EMBED_CHANNELS.concat(channels);
+
+    // Build the Bangladesh set — best-known / most-sourced first
+    bangladesh = channels
+      .filter(c => c.country === "BD")
+      .sort((a, b) =>
+        b.pop - a.pop ||
+        b.streams.length - a.streams.length ||
+        a.name.localeCompare(b.name)
+      );
+
+    buildFifa();
+    buildFilterOptions();
+    $("totalCount").textContent = channels.length.toLocaleString();
+    applyFilters();
+    $("boot").remove();
+
+    // Default: stage the first FIFA-lineup channel (Canada vs Bosnia) behind the play button.
+    const opener = fifa.find(c => !c.unavailable && (c.embedUrl || c.streams.length));
+    if (opener) arm(opener);
+  } catch (e) {
+    $("bootmsg").innerHTML =
+      "Couldn't load the channel playlist.<br><br>" +
+      "If you're viewing this inside a sandboxed preview, download the file and open it directly in your browser —<br>" +
+      "the playlist is fetched live from iptv-org.github.io and needs normal internet access.";
+    console.error(e);
+  }
+}
+
+function buildFifa() {
+  fifa = FIFA_SPEC.map(spec => {
+    // Score each candidate: most-specific keyword first (earliest key index),
+    // exact name match wins, then more sources, then popularity.
+    const scored = [];
+    channels.forEach(c => {
+      if (spec.country && c.country !== spec.country) return;
+      const n = c.name.toLowerCase();
+      const ki = spec.keys.findIndex(k => n.includes(k));
+      if (ki === -1) return;
+      const exact = spec.keys.some(k => n === k) ? 1 : 0;
+      scored.push({ c, ki, exact });
+    });
+    scored.sort((a, b) =>
+      b.exact - a.exact ||
+      a.ki - b.ki ||
+      b.c.streams.length - a.c.streams.length ||
+      b.c.pop - a.c.pop ||
+      a.c.name.localeCompare(b.c.name)
+    );
+    const match = scored[0] && scored[0].c;
+    if (match) {
+      const ch = Object.assign({}, match, { fifaLabel: spec.label });
+      // Clone the streams array so reordering never mutates the shared record.
+      ch.streams = match.streams.slice();
+      // Optionally promote a given source to play first (e.g. 2nd → 1st).
+      if (spec.firstSource != null && ch.streams.length > spec.firstSource) {
+        const promoted = ch.streams[spec.firstSource];
+        ch.streams[spec.firstSource] = ch.streams[0];
+        ch.streams[0] = promoted;
+      }
+      return ch;
+    }
+    // No free-to-air stream in the playlist right now — keep the slot as a disabled card.
+    return {
+      id: "fifa:" + spec.label, name: spec.label,
+      country: spec.country, countryName: spec.country === "BD" ? "Bangladesh" : "Global",
+      flag: spec.country === "BD" ? "🇧🇩" : "🌐",
+      categories: ["sports"], logo: "", streams: [], pop: 0,
+      fifaLabel: spec.label, unavailable: true,
+    };
+  });
+
+  // Put curated embed channels at the FRONT of the World Cup lineup (cloned so
+  // the plain entry in the All-channels list keeps its normal icon).
+  const embedCards = EMBED_CHANNELS.map(c => Object.assign({}, c, { fifaLabel: c.name }));
+  fifa = embedCards.concat(fifa);
+}
+
+function buildFilterOptions() {
+  const usedCountries = {};
+  const usedCats = {};
+  channels.forEach(c => {
+    if (c.country) usedCountries[c.country] = c;
+    c.categories.forEach(cat => usedCats[cat] = true);
+  });
+  const cSel = $("country");
+  Object.values(usedCountries)
+    .sort((a, b) => a.countryName.localeCompare(b.countryName))
+    .forEach(c => {
+      const o = document.createElement("option");
+      o.value = c.country;
+      o.textContent = `${c.flag} ${c.countryName}`;
+      cSel.appendChild(o);
+    });
+  const catSel = $("category");
+  Object.keys(usedCats).sort().forEach(cat => {
+    const o = document.createElement("option");
+    o.value = cat;
+    o.textContent = `${CAT_EMOJI[cat] || "•"} ${cat[0].toUpperCase() + cat.slice(1)}`;
+    catSel.appendChild(o);
+  });
+}
+
+/* ---------- Filtering ---------- */
+function applyFilters() {
+  const q = $("search").value.trim().toLowerCase();
+  const co = $("country").value;
+  const cat = $("category").value;
+
+  // Base set depends on scope when no search/filter is active.
+  const clean = !q && !co && !cat;
+  const useFifa = scope === "fifa" && clean;
+  const useBD = scope === "bd" && clean;
+  const base = useFifa ? fifa : useBD ? bangladesh : channels;
+
+  filtered = base.filter(c =>
+    (!q || c.name.toLowerCase().includes(q)) &&
+    (!co || c.country === co) &&
+    (!cat || c.categories.includes(cat))
+  );
+
+  const label = useFifa
+    ? `${filtered.length} FIFA World Cup channels`
+    : useBD
+      ? `${filtered.length.toLocaleString()} Bangladesh channels`
+      : `${filtered.length.toLocaleString()} channels match`;
+  $("filterCount").textContent = label;
+
+  resetList();
+}
+
+/* ---------- Virtualized list ---------- */
+const ROW_H = 64;
+const OVERSCAN = 8;
+const listEl = $("list");
+const vp = $("vp");
+let rangeStart = -1, rangeEnd = -1;
+let ticking = false;
+const mq = window.matchMedia("(max-width: 760px)");
+const isMobile = () => mq.matches;
+
+/* Where the scroll position lives differs by layout: on desktop the channel
+   list is its own scroll box; on mobile the whole window scrolls. */
+function listMetrics() {
+  if (isMobile()) {
+    const listTop = listEl.getBoundingClientRect().top + window.scrollY;
+    return { scrollTop: window.scrollY - listTop, vh: window.innerHeight };
+  }
+  return { scrollTop: listEl.scrollTop, vh: listEl.clientHeight };
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, m =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+}
+function cap(s) { return s ? s[0].toUpperCase() + s.slice(1) : ""; }
+
+function rowHTML(c, idx) {
+  const emoji = c.fifaLabel ? "⚽" : catEmoji(c);
+  const active = current && c.id === current.id ? " active" : "";
+  const dim = c.unavailable ? " dim" : "";
+  const sub = c.unavailable
+    ? `${c.flag} ${c.countryName} · no public stream right now`
+    : c.newTab
+      ? `${c.flag} ${c.countryName} · New Tab`
+      : c.embedUrl
+        ? `${c.flag} ${c.countryName} · live embed`
+        : [
+            c.flag,
+            c.countryName,
+            cap(c.categories[0] || ""),
+            c.streams.length > 1 ? `${c.streams.length} sources` : "1 source"
+          ].filter(Boolean).join(" · ");
+  const thumb = c.logo
+    ? `<div class="thumb"><img loading="lazy" decoding="async" referrerpolicy="no-referrer" src="${esc(c.logo)}" alt="" onerror="this.closest('.thumb').classList.add('noimg');this.remove();"><span class="femoji">${emoji}</span></div>`
+    : `<div class="thumb noimg"><span class="femoji">${emoji}</span></div>`;
+  return `<div class="ch${active}${dim}" data-idx="${idx}" data-id="${esc(c.id)}" style="top:${idx * ROW_H}px">
+    ${thumb}
+    <div class="meta">
+      <div class="name"><span class="ne">${emoji}</span><span class="nt">${esc(c.name)}</span></div>
+      <div class="sub">${esc(sub)}</div>
+    </div>
+  </div>`;
+}
+
+function resetList() {
+  rangeStart = rangeEnd = -1;
+  if (isMobile()) window.scrollTo(0, 0); else listEl.scrollTop = 0;
+  if (filtered.length === 0) {
+    vp.style.height = "0px";
+    vp.innerHTML = `<div class="empty">No channels match these filters.<br>Try the “All channels” tab or clear the search.</div>`;
+    return;
+  }
+  vp.style.height = (filtered.length * ROW_H) + "px";
+  renderRange(true);
+}
+
+function renderRange(force) {
+  if (filtered.length === 0) return;
+  const { scrollTop, vh } = listMetrics();
+  const start = Math.max(0, Math.floor(scrollTop / ROW_H) - OVERSCAN);
+  const end = Math.min(filtered.length, Math.ceil((scrollTop + vh) / ROW_H) + OVERSCAN);
+  if (!force && start === rangeStart && end === rangeEnd) return;
+  rangeStart = start; rangeEnd = end;
+  let html = "";
+  for (let i = start; i < end; i++) html += rowHTML(filtered[i], i);
+  vp.innerHTML = html;
+}
+
+function onScroll() {
+  if (ticking) return;
+  ticking = true;
+  requestAnimationFrame(() => { renderRange(false); ticking = false; });
+}
+listEl.addEventListener("scroll", onScroll);              // desktop: list scrolls
+window.addEventListener("scroll", onScroll, { passive: true }); // mobile: page scrolls
+listEl.addEventListener("click", e => {
+  const row = e.target.closest(".ch");
+  if (!row) return;
+  play(filtered[+row.dataset.idx]);
+});
+window.addEventListener("resize", () => renderRange(true));
+mq.addEventListener("change", () => resetList());          // re-layout on breakpoint flip
+
+function paintActive() {
+  vp.querySelectorAll(".ch").forEach(el =>
+    el.classList.toggle("active", current && el.dataset.id === current.id));
+}
+
+/* ---------- Playback ---------- */
+function setOverlays({ loading = false, error = false, play = false, hint = "" }) {
+  $("loadingOverlay").classList.toggle("show", loading);
+  $("errorOverlay").classList.toggle("show", error);
+  $("playOverlay").classList.toggle("show", play);
+  if (hint) $("errorHint").textContent = hint;
+}
+
+/* Stage a channel behind the play button without loading its stream yet. */
+function arm(channel) {
+  if (!channel) return;
+  current = channel;
+  srcIndex = 0;
+  paintActive();
+  $("nowIcon").textContent = channel.fifaLabel ? "⚽" : catEmoji(channel);
+  $("nowName").textContent = channel.name;
+  $("nowSub").textContent = `${channel.flag} ${channel.countryName} · press play to start`;
+  $("srcBtn").style.display = "none";
+  $("onair").classList.remove("live");
+  setOverlays({ play: true });   // SMPTE bars stay visible behind the button
+}
+
+/* Try to start playback; if the browser blocks it, fall back to the play button. */
+function attemptPlay(video) {
+  const p = video.play();
+  if (p && typeof p.then === "function") {
+    p.catch(() => setOverlays({ play: true }));
+  }
+}
+
+/* Show an external player page in the iframe (no HLS stream). */
+function playEmbed(channel) {
+  embedActive = true;
+  paintActive();
+  $("idle").style.display = "none";
+  setOverlays({});                      // hide play / loading / error overlays
+
+  // Stop any HLS playback so its audio doesn't keep running behind the iframe.
+  if (hls) { hls.destroy(); hls = null; }
+  const video = $("video");
+  video.removeAttribute("src");
+  video.load();
+
+  $("nowIcon").textContent = catEmoji(channel);
+  $("nowName").textContent = channel.name;
+  $("nowSub").textContent = `${channel.flag} ${channel.countryName} · external embed`;
+  $("srcBtn").style.display = "none";
+  $("onair").classList.add("live");
+
+  const f = $("embedFrame");
+  if (f.getAttribute("src") !== channel.embedUrl) f.setAttribute("src", channel.embedUrl);
+  f.classList.add("show");
+}
+
+/* Enter/exit a CSS-driven fullscreen for the embed (mobile-safe). */
+function enterEmbedFS() {
+  if (!embedActive) return;
+  $("embedFrame").classList.add("cssfs");
+  $("embedExit").classList.add("show");
+}
+function exitEmbedFS() {
+  $("embedFrame").classList.remove("cssfs");
+  $("embedExit").classList.remove("show");
+}
+
+/* Hide the embed iframe and unload its src to stop the external player. */
+function hideEmbed() {
+  if (!embedActive) return;
+  exitEmbedFS();
+  const f = $("embedFrame");
+  f.classList.remove("show");
+  f.removeAttribute("src");
+  embedActive = false;
+}
+
+function play(channel, sourceIdx = 0) {
+  if (!channel) return;
+
+  // New-tab channels just open their page in a new browser tab and leave the
+  // current player untouched.
+  if (channel.newTab) {
+    window.open(channel.embedUrl, "_blank", "noopener");
+    return;
+  }
+
+  current = channel;
+  srcIndex = sourceIdx;
+
+  // External-embed channels bypass the HLS pipeline entirely.
+  if (channel.embedUrl) { playEmbed(channel); return; }
+
+  const video = $("video");
+
+  paintActive();
+  hideEmbed();                          // leaving an embed channel? stop its player
+  $("idle").style.display = "none";
+  $("nowIcon").textContent = channel.fifaLabel ? "⚽" : catEmoji(channel);
+  $("nowName").textContent = channel.name;
+
+  // Always fully tear down the previous stream first — frees the decoder and buffer.
+  if (hls) { hls.destroy(); hls = null; }
+  $("onair").classList.remove("live");
+  video.removeAttribute("src");
+  video.load();
+
+  if (!channel.streams.length) {
+    $("nowSub").textContent = `${channel.flag} ${channel.countryName} · no public stream`;
+    $("srcBtn").style.display = "none";
+    setOverlays({
+      loading: false, error: true,
+      hint: "No public free-to-air stream is listed for this broadcaster right now. FIFA coverage is usually geo-locked to the local rights holder — try BTV National or T Sports.",
+    });
+    $("retryBtn").textContent = "Pick another channel";
+    return;
+  }
+
+  const url = channel.streams[srcIndex];
+  $("nowSub").textContent = `${channel.flag} ${channel.countryName} · source ${srcIndex + 1}/${channel.streams.length}`;
+  $("srcBtn").style.display = channel.streams.length > 1 ? "" : "none";
+  setOverlays({ loading: true, error: false });
+
+  video.onplaying = () => {
+    setOverlays({ loading: false, error: false });
+    $("onair").classList.add("live");
+  };
+
+  if (Hls.isSupported()) {
+    hls = new Hls({
+      manifestLoadingTimeOut: 12000,
+      levelLoadingTimeOut: 12000,
+      fragLoadingTimeOut: 15000,
+      // Cap buffering so a long-running stream can't balloon in memory.
+      backBufferLength: 30,
+      maxBufferLength: 30,
+      maxMaxBufferLength: 60,
+      maxBufferSize: 60 * 1000 * 1000,
+    });
+    hls.loadSource(url);
+    hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_PARSED, () => attemptPlay(video));
+    hls.on(Hls.Events.ERROR, (_, data) => { if (data.fatal) failStream(); });
+  } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+    video.src = url;
+    video.onerror = failStream;
+    attemptPlay(video);
+  } else {
+    setOverlays({ error: true, hint: "Your browser can't play HLS streams." });
+  }
+}
+
+function failStream() {
+  if (hls) { hls.destroy(); hls = null; }
+  $("onair").classList.remove("live");
+  const remaining = current ? current.streams.length - srcIndex - 1 : 0;
+  setOverlays({
+    loading: false,
+    error: true,
+    hint: remaining > 0
+      ? `This source is offline or geo-blocked. ${remaining} alternate source${remaining > 1 ? "s" : ""} available.`
+      : "This stream appears to be offline or geo-blocked. Try another channel.",
+  });
+  $("retryBtn").textContent = remaining > 0 ? "Try next source" : "Retry this source";
+}
+
+function nextSource() {
+  if (!current || !current.streams.length) return;
+  play(current, (srcIndex + 1) % current.streams.length);
+}
+
+/* ---------- Events ---------- */
+let searchTimer;
+$("search").addEventListener("input", () => {
+  if ($("search").value.trim() && scope !== "all") setScope("all");
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(applyFilters, 200);
+});
+$("country").addEventListener("change", () => {
+  if ($("country").value && scope !== "all") setScope("all");
+  applyFilters();
+});
+$("category").addEventListener("change", () => {
+  if ($("category").value && scope !== "all") setScope("all");
+  applyFilters();
+});
+document.querySelectorAll(".pill").forEach(p =>
+  p.addEventListener("click", () => setScope(p.dataset.scope, true)));
+
+function setScope(s, clearFilters = false) {
+  scope = s;
+  if (clearFilters) {
+    $("search").value = "";
+    $("country").value = "";
+    $("category").value = "";
+  }
+  document.querySelectorAll(".pill").forEach(p =>
+    p.classList.toggle("active", p.dataset.scope === s));
+  applyFilters();
+}
+
+$("retryBtn").addEventListener("click", nextSource);
+$("srcBtn").addEventListener("click", nextSource);
+/* Cross-browser fullscreen request (covers iframe + iOS video). */
+function requestFS(el) {
+  if (!el) return;
+  if (el.requestFullscreen) el.requestFullscreen();
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  else if (el.webkitEnterFullscreen) el.webkitEnterFullscreen();
+}
+
+$("playBtn").addEventListener("click", () => {
+  if (!current) return;
+  play(current, srcIndex);
+  // Embed channels: blow the player up to fill the screen so mobile users get
+  // a usable view, with a floating exit button layered on top.
+  if (current.embedUrl) enterEmbedFS();
+});
+$("fsBtn").addEventListener("click", () => {
+  if (current && current.embedUrl) {
+    if (!embedActive) play(current);   // load it first if only staged
+    enterEmbedFS();
+    return;
+  }
+  requestFS($("video"));
+});
+$("embedExit").addEventListener("click", exitEmbedFS);
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") exitEmbedFS();
+});
+
+boot();
+</script>
+<script src="https://pl29706298.effectivecpmnetwork.com/95/d5/4b/95d54b034af57318b1e211c6ecf6d3e2.js"></script>
+</body>
+</html>
