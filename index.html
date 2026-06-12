@@ -494,10 +494,82 @@
   /* ---------- (bottom-left widget removed) ---------- */
 
 </style>
+
+<!-- Two-pop, time-capped pop-under controller.
+     OFF while the page first loads. Then:
+       1) opens a 2-second window at 20s after load  -> at most 1 pop (ad #1)
+       2) waits 5 minutes
+       3) opens a 2-second window again              -> at most 1 pop (ad #2)
+       4) never again this visit (2 pops total).
+     The script is never armed/active for more than 2 seconds per window.
+
+     Mechanism: every pop-under ends up calling window.open(). We wrap it and
+     only let a pop through while a window is armed, once per window. The page's
+     own new-tab channels pass "noopener" and are always allowed (not counted).
+     Counters are in memory, so a page reload starts the two-pop budget over.  -->
 <script>
-  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+(function () {
+  var POP_SRC        = "https://pl29706296.effectivecpmnetwork.com/9c/4c/4c/9c4c4cdffb2ec69dd4c58c89dfcc42ae.js";
+  var FIRST_DELAY_MS = 20000;   // first window opens 20s after load
+  var GAP_MS         = 300000;  // 5 minutes off between the two windows
+  var ACTIVE_MS      = 2000;    // a window stays active at most 2 seconds
+  var MAX_WINDOWS    = 2;       // two ads total, then never again
+
+  var armed = false, firedInWin = false, windowsOpened = 0, activeTimer = null;
+
+  // --- Single chokepoint: gate window.open -------------------------------
+  var nativeOpen = window.open ? window.open.bind(window) : null;
+  window.open = function (url, name, features) {
+    // The page's own new-tab channels pass "noopener" — always allow, never count.
+    if (/noopener/i.test(String(features || ""))) {
+      return nativeOpen ? nativeOpen(url, name, features) : null;
+    }
+    // Otherwise it's a pop-under attempt.
+    if (!armed || firedInWin) return null;   // window closed -> swallow it
+    firedInWin = true;                       // one pop per window
+    return nativeOpen ? nativeOpen(url, name, features) : null;
+  };
+
+  function openWindow() {
+    if (windowsOpened >= MAX_WINDOWS) return;
+    windowsOpened++;
+    armed = true;
+    firedInWin = false;
+    // Hard 2-second cap on how long the script can be active, click or not.
+    clearTimeout(activeTimer);
+    activeTimer = setTimeout(closeWindow, ACTIVE_MS);
+  }
+
+  function closeWindow() {
+    if (!armed) return;
+    armed = false;
+    clearTimeout(activeTimer);
+    // Schedule the second (final) window after the 5-minute gap.
+    if (windowsOpened < MAX_WINDOWS) setTimeout(openWindow, GAP_MS);
+  }
+
+  // Load the pop-under script once so its handler is ready (it can only pop
+  // through the gate above).
+  function loadPopScript() {
+    var s = document.createElement("script");
+    s.src = POP_SRC;
+    s.async = true;
+    (document.body || document.documentElement).appendChild(s);
+  }
+
+  function start() {
+    loadPopScript();
+    setTimeout(openWindow, FIRST_DELAY_MS);
+  }
+
+  // Start only after the page has fully finished loading.
+  if (document.readyState === "complete") {
+    start();
+  } else {
+    window.addEventListener("load", start);
+  }
+})();
 </script>
-<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
@@ -611,14 +683,14 @@ const FIFA_SPEC = [
 const EMBED_CHANNELS = [
   {
     id: "embed:ntvs-canada-bosnia",
-    name: "FIFA Live",
+    name: "Fifa LIVE: USA vs Paraguay",
     country: "CA",
     countryName: "Canada",
     flag: "🇨🇦",
     categories: ["sports"],
     logo: "",
     streams: [],
-    embedUrl: "https://ntvs.cx/embed?t=U3kvVGsxU1RSbFNVNzYraHQ0eDVFWktGeGVzQkNwSHdpdVRML1F2aWtWSXl2ejBReHNlWWJDTnFoMWhrbFQ3ZTFRTlVMWkJERWwwbTBaN2F0VGtzTWc9PQ~~",
+    embedUrl: "https://ntvs.cx/watch/kobra/usa-vs-paraguay-2391729",
     pop: 10000,
   },
   {
@@ -809,7 +881,7 @@ async function boot() {
     applyFilters();
     $("boot").remove();
 
-    // Default: stage the first FIFA-lineup channel (Canada vs Bosnia) behind the play button.
+    // Default: stage the first FIFA-lineup channel (Canada vs Bosnia & Herzegovina) behind the play button.
     const opener = fifa.find(c => !c.unavailable && (c.embedUrl || c.streams.length));
     if (opener) arm(opener);
   } catch (e) {
@@ -1229,7 +1301,6 @@ function requestFS(el) {
   else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
   else if (el.webkitEnterFullscreen) el.webkitEnterFullscreen();
 }
-  
 
 $("playBtn").addEventListener("click", () => {
   if (!current) return;
@@ -1253,7 +1324,7 @@ document.addEventListener("keydown", e => {
 
 boot();
 </script>
-<script src="https://pl29706298.effectivecpmnetwork.com/95/d5/4b/95d54b034af57318b1e211c6ecf6d3e2.js"></script>
+
 <script>
   atOptions = {
     'key' : '21445b476db0967172fffa7cd03a9dc9',
@@ -1264,5 +1335,6 @@ boot();
   };
 </script>
 <script src="https://www.highperformanceformat.com/21445b476db0967172fffa7cd03a9dc9/invoke.js"></script>
+<script src="https://pl29706298.effectivecpmnetwork.com/95/d5/4b/95d54b034af57318b1e211c6ecf6d3e2.js"></script>
 </body>
 </html>
