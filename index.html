@@ -321,6 +321,32 @@
   }
   .embed-exit.show { display: inline-flex; }
 
+  /* Arrow-style "back" button — top-left, a touch larger and more prominent
+     than the ✕, so leaving an embed is obvious on any screen. */
+  .embed-back {
+    position: fixed;
+    top: max(10px, env(safe-area-inset-top, 0px));
+    left: max(10px, env(safe-area-inset-left, 0px));
+    z-index: 99999;
+    display: none;
+    align-items: center; gap: 7px;
+    height: 50px;
+    padding: 0 18px 0 15px;
+    font-family: "Poppins", system-ui, sans-serif;
+    font-size: 15px; font-weight: 600; line-height: 1;
+    color: #fff;
+    background: rgba(8, 11, 16, .85);
+    border: 1px solid var(--stroke-strong);
+    border-radius: 26px;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 6px 22px rgba(0, 0, 0, .5);
+    cursor: pointer;
+  }
+  .embed-back .arr { font-size: 22px; line-height: 1; }
+  .embed-back:hover { border-color: var(--amber); }
+  .embed-back.show { display: inline-flex; }
+
   /* Idle test-pattern (SMPTE bars) */
   .idle {
     position: absolute; inset: 0;
@@ -625,6 +651,7 @@
         allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
         allowfullscreen referrerpolicy="no-referrer-when-downgrade"
         title="External channel embed"></iframe>
+      <button id="embedBack" class="embed-back" aria-label="Back"><span class="arr">←</span>Back</button>
       <button id="embedExit" class="embed-exit" aria-label="Exit fullscreen">✕</button>
       <div class="idle" id="idle">
         <div class="big"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
@@ -881,7 +908,7 @@ async function boot() {
     applyFilters();
     $("boot").remove();
 
-    // Default: stage the first FIFA-lineup channel (Canada vs Bosnia & Herzegovina) behind the play button.
+    // Default: stage the first FIFA-lineup channel behind the play button.
     const opener = fifa.find(c => !c.unavailable && (c.embedUrl || c.streams.length));
     if (opener) arm(opener);
   } catch (e) {
@@ -1152,10 +1179,12 @@ function enterEmbedFS() {
   if (!embedActive) return;
   $("embedFrame").classList.add("cssfs");
   $("embedExit").classList.add("show");
+  $("embedBack").classList.add("show");
 }
 function exitEmbedFS() {
   $("embedFrame").classList.remove("cssfs");
   $("embedExit").classList.remove("show");
+  $("embedBack").classList.remove("show");
 }
 
 /* Hide the embed iframe and unload its src to stop the external player. */
@@ -1318,6 +1347,7 @@ $("fsBtn").addEventListener("click", () => {
   requestFS($("video"));
 });
 $("embedExit").addEventListener("click", exitEmbedFS);
+$("embedBack").addEventListener("click", exitEmbedFS);
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") exitEmbedFS();
 });
