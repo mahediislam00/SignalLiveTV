@@ -533,69 +533,7 @@
      only let a pop through while a window is armed, once per window. The page's
      own new-tab channels pass "noopener" and are always allowed (not counted).
      Counters are in memory, so a page reload starts the two-pop budget over.  -->
-<script>
-(function () {
-  var POP_SRC        = "https://pl29706296.effectivecpmnetwork.com/9c/4c/4c/9c4c4cdffb2ec69dd4c58c89dfcc42ae.js";
-  var FIRST_DELAY_MS = 20000;   // first window opens 20s after load
-  var GAP_MS         = 300000;  // 5 minutes off between the two windows
-  var ACTIVE_MS      = 2000;    // a window stays active at most 2 seconds
-  var MAX_WINDOWS    = 2;       // two ads total, then never again
-
-  var armed = false, firedInWin = false, windowsOpened = 0, activeTimer = null;
-
-  // --- Single chokepoint: gate window.open -------------------------------
-  var nativeOpen = window.open ? window.open.bind(window) : null;
-  window.open = function (url, name, features) {
-    // The page's own new-tab channels pass "noopener" — always allow, never count.
-    if (/noopener/i.test(String(features || ""))) {
-      return nativeOpen ? nativeOpen(url, name, features) : null;
-    }
-    // Otherwise it's a pop-under attempt.
-    if (!armed || firedInWin) return null;   // window closed -> swallow it
-    firedInWin = true;                       // one pop per window
-    return nativeOpen ? nativeOpen(url, name, features) : null;
-  };
-
-  function openWindow() {
-    if (windowsOpened >= MAX_WINDOWS) return;
-    windowsOpened++;
-    armed = true;
-    firedInWin = false;
-    // Hard 2-second cap on how long the script can be active, click or not.
-    clearTimeout(activeTimer);
-    activeTimer = setTimeout(closeWindow, ACTIVE_MS);
-  }
-
-  function closeWindow() {
-    if (!armed) return;
-    armed = false;
-    clearTimeout(activeTimer);
-    // Schedule the second (final) window after the 5-minute gap.
-    if (windowsOpened < MAX_WINDOWS) setTimeout(openWindow, GAP_MS);
-  }
-
-  // Load the pop-under script once so its handler is ready (it can only pop
-  // through the gate above).
-  function loadPopScript() {
-    var s = document.createElement("script");
-    s.src = POP_SRC;
-    s.async = true;
-    (document.body || document.documentElement).appendChild(s);
-  }
-
-  function start() {
-    loadPopScript();
-    setTimeout(openWindow, FIRST_DELAY_MS);
-  }
-
-  // Start only after the page has fully finished loading.
-  if (document.readyState === "complete") {
-    start();
-  } else {
-    window.addEventListener("load", start);
-  }
-})();
-</script>
+<script>(function(s){s.dataset.zone='11142697',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 </head>
 <body>
 
