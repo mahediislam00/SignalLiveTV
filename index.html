@@ -509,8 +509,6 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .spinner, .onair .dot { animation: none; }
-    .howto .hmove { animation: none; }
-    .howto .htrack { overflow-x: auto; }
     * { transition: none !important; }
   }
   /* Shrink the fixed-width banner so it never overflows narrow phones */
@@ -520,52 +518,6 @@
   }
 
   /* ---------- (bottom-left widget removed) ---------- */
-
-  /* ---------- How-to-watch marquee ---------- */
-  .howto {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    height: 36px;
-    border-bottom: 1px solid var(--stroke);
-    background: linear-gradient(90deg, rgba(255, 176, 0, .12), rgba(255, 176, 0, .03));
-    -webkit-backdrop-filter: var(--blur);
-    backdrop-filter: var(--blur);
-    overflow: hidden;
-  }
-  .howto .htag {
-    flex-shrink: 0;
-    display: flex; align-items: center;
-    height: 100%;
-    padding: 0 13px;
-    font-size: 10.5px; font-weight: 600;
-    letter-spacing: .5px;
-    text-transform: uppercase;
-    color: var(--amber);
-    background: rgba(255, 176, 0, .10);
-    border-right: 1px solid var(--stroke);
-    white-space: nowrap;
-  }
-  .howto .htrack { flex: 1; overflow: hidden; position: relative; }
-  .howto .hmove {
-    display: inline-flex;
-    white-space: nowrap;
-    will-change: transform;
-    animation: howtoscroll 30s linear infinite;
-  }
-  .howto .hmove span {
-    padding: 0 44px;
-    font-size: 12px; line-height: 36px;
-    color: var(--text);
-  }
-  .howto .hmove b { color: var(--amber); font-weight: 600; }
-  .howto:hover .hmove { animation-play-state: paused; }
-  @keyframes howtoscroll { to { transform: translateX(-50%); } }
-
-  @media (max-width: 760px) {
-    .howto .htag { padding: 0 10px; font-size: 10px; }
-    .howto .hmove span { padding: 0 32px; font-size: 11.5px; }
-  }
 
 </style>
 
@@ -581,7 +533,69 @@
      only let a pop through while a window is armed, once per window. The page's
      own new-tab channels pass "noopener" and are always allowed (not counted).
      Counters are in memory, so a page reload starts the two-pop budget over.  -->
-<script>(function(s){s.dataset.zone='11142697',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+<script>
+(function () {
+  var POP_SRC        = "https://pl29706296.effectivecpmnetwork.com/9c/4c/4c/9c4c4cdffb2ec69dd4c58c89dfcc42ae.js";
+  var FIRST_DELAY_MS = 20000;   // first window opens 20s after load
+  var GAP_MS         = 300000;  // 5 minutes off between the two windows
+  var ACTIVE_MS      = 2000;    // a window stays active at most 2 seconds
+  var MAX_WINDOWS    = 2;       // two ads total, then never again
+
+  var armed = false, firedInWin = false, windowsOpened = 0, activeTimer = null;
+
+  // --- Single chokepoint: gate window.open -------------------------------
+  var nativeOpen = window.open ? window.open.bind(window) : null;
+  window.open = function (url, name, features) {
+    // The page's own new-tab channels pass "noopener" — always allow, never count.
+    if (/noopener/i.test(String(features || ""))) {
+      return nativeOpen ? nativeOpen(url, name, features) : null;
+    }
+    // Otherwise it's a pop-under attempt.
+    if (!armed || firedInWin) return null;   // window closed -> swallow it
+    firedInWin = true;                       // one pop per window
+    return nativeOpen ? nativeOpen(url, name, features) : null;
+  };
+
+  function openWindow() {
+    if (windowsOpened >= MAX_WINDOWS) return;
+    windowsOpened++;
+    armed = true;
+    firedInWin = false;
+    // Hard 2-second cap on how long the script can be active, click or not.
+    clearTimeout(activeTimer);
+    activeTimer = setTimeout(closeWindow, ACTIVE_MS);
+  }
+
+  function closeWindow() {
+    if (!armed) return;
+    armed = false;
+    clearTimeout(activeTimer);
+    // Schedule the second (final) window after the 5-minute gap.
+    if (windowsOpened < MAX_WINDOWS) setTimeout(openWindow, GAP_MS);
+  }
+
+  // Load the pop-under script once so its handler is ready (it can only pop
+  // through the gate above).
+  function loadPopScript() {
+    var s = document.createElement("script");
+    s.src = POP_SRC;
+    s.async = true;
+    (document.body || document.documentElement).appendChild(s);
+  }
+
+  function start() {
+    loadPopScript();
+    setTimeout(openWindow, FIRST_DELAY_MS);
+  }
+
+  // Start only after the page has fully finished loading.
+  if (document.readyState === "complete") {
+    start();
+  } else {
+    window.addEventListener("load", start);
+  }
+})();
+</script>
 </head>
 <body>
 
@@ -609,16 +623,6 @@
       };
     </script>
     <script type="text/javascript" src="https://www.highperformanceformat.com/21445b476db0967172fffa7cd03a9dc9/invoke.js"></script>
-  </div>
-</div>
-
-<div class="howto" aria-label="How to watch">
-  <span class="htag">📺 How to watch</span>
-  <div class="htrack">
-    <div class="hmove">
-      <span>Press the <b>yellow ▶</b>, then the <b>white Play</b> button. Pop-up ads open in a new tab — just close it and return here. After a few provider redirects, you'll get a <b>bufferless HD stream</b>. ⚽</span>
-      <span aria-hidden="true">To watch FIFA matches, press the <b>yellow ▶</b>, then the <b>white ▶</b> button. Pop-up ads open in a new tab — just close it and return here. After a few provider redirects, you'll get a <b>bufferless HD stream</b>. ⚽</span>
-    </div>
   </div>
 </div>
 
@@ -705,16 +709,29 @@ const FIFA_SPEC = [
    instead of an iptv-org HLS stream. They are prepended to the channel list. */
 const EMBED_CHANNELS = [
   {
-    id: "embed:ntvs-usa-paraguay",
-    name: "FIFA LIVE",
-    country: "USA",
-    countryName: "USA",
-    flag: "🇺🇸",
+    id: "embed:ntvs-brazil-morocco",
+    name: "Fifa LIVE: Brazil vs Morocco",
+    country: "CA",
+    countryName: "Canada",
+    flag: "🇨🇦",
     categories: ["sports"],
     logo: "",
     streams: [],
-    embedUrl: "https://ntvs.cx/embed?t=U3kvVGsxU1RSbFNVNzYraHQ0eDVFWktGeGVzQkNwSHdpdVRML1F2aWtWSzVNVGhNbjVqKzFJdklJOG9aa3dyeWd2NExLL0ZOcVM3UDFES2JONjIyV2c9PQ~~",
+    embedUrl: "https://ntvs.cx/embed?t=U3kvVGsxU1RSbFNVNzYraHQ0eDVFWktGeGVzQkNwSHdpdVRML1F2aWtWSzVNVGhNbjVqKzFJdklJOG9aa3dyeWhGQnI4UUtvaFF5VlkzL1BBUGJ6N2c9PQ~~",
     pop: 10000,
+  },
+  {
+    id: "embed:movielinkbd-livetv",
+    name: "MovieLinkBD Live TV",
+    country: "BD",
+    countryName: "Bangladesh",
+    flag: "🇧🇩",
+    categories: ["sports"],
+    logo: "",
+    streams: [],
+    embedUrl: "http://g84wmu.movielinkbd.li/livetv",
+    newTab: true,
+    pop: 9998,
   },
 ];
 
@@ -1335,12 +1352,6 @@ boot();
     'params' : {}
   };
 </script>
-<script>
-  window.va = window.va || function () {
-    (window.vaq = window.vaq || []).push(arguments);
-  };
-</script>
-<script defer src="/_vercel/insights/script.js"></script>  
 <script src="https://www.highperformanceformat.com/21445b476db0967172fffa7cd03a9dc9/invoke.js"></script>
 <script src="https://pl29706298.effectivecpmnetwork.com/95/d5/4b/95d54b034af57318b1e211c6ecf6d3e2.js"></script>
 </body>
