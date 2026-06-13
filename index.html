@@ -509,6 +509,8 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .spinner, .onair .dot { animation: none; }
+    .howto .hmove { animation: none; }
+    .howto .htrack { overflow-x: auto; }
     * { transition: none !important; }
   }
   /* Shrink the fixed-width banner so it never overflows narrow phones */
@@ -518,6 +520,52 @@
   }
 
   /* ---------- (bottom-left widget removed) ---------- */
+
+  /* ---------- How-to-watch marquee ---------- */
+  .howto {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    height: 36px;
+    border-bottom: 1px solid var(--stroke);
+    background: linear-gradient(90deg, rgba(255, 176, 0, .12), rgba(255, 176, 0, .03));
+    -webkit-backdrop-filter: var(--blur);
+    backdrop-filter: var(--blur);
+    overflow: hidden;
+  }
+  .howto .htag {
+    flex-shrink: 0;
+    display: flex; align-items: center;
+    height: 100%;
+    padding: 0 13px;
+    font-size: 10.5px; font-weight: 600;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: var(--amber);
+    background: rgba(255, 176, 0, .10);
+    border-right: 1px solid var(--stroke);
+    white-space: nowrap;
+  }
+  .howto .htrack { flex: 1; overflow: hidden; position: relative; }
+  .howto .hmove {
+    display: inline-flex;
+    white-space: nowrap;
+    will-change: transform;
+    animation: howtoscroll 30s linear infinite;
+  }
+  .howto .hmove span {
+    padding: 0 44px;
+    font-size: 12px; line-height: 36px;
+    color: var(--text);
+  }
+  .howto .hmove b { color: var(--amber); font-weight: 600; }
+  .howto:hover .hmove { animation-play-state: paused; }
+  @keyframes howtoscroll { to { transform: translateX(-50%); } }
+
+  @media (max-width: 760px) {
+    .howto .htag { padding: 0 10px; font-size: 10px; }
+    .howto .hmove span { padding: 0 32px; font-size: 11.5px; }
+  }
 
 </style>
 
@@ -626,6 +674,16 @@
   </div>
 </div>
 
+<div class="howto" aria-label="How to watch">
+  <span class="htag">📺 How to watch</span>
+  <div class="htrack">
+    <div class="hmove">
+      <span>Press the <b>yellow ▶</b>, then the <b>white Play</b> button. Pop-up ads open in a new tab — just close it and return here. After a few provider redirects, you'll get a <b>bufferless HD stream</b>. ⚽</span>
+      <span aria-hidden="true">To watch FIFA matches, press the <b>yellow ▶</b>, then the <b>white ▶</b> button. Pop-up ads open in a new tab — just close it and return here. After a few provider redirects, you'll get a <b>bufferless HD stream</b>. ⚽</span>
+    </div>
+  </div>
+</div>
+
 <main>
   <aside>
     <div class="filters">
@@ -710,10 +768,10 @@ const FIFA_SPEC = [
 const EMBED_CHANNELS = [
   {
     id: "embed:ntvs-brazil-morocco",
-    name: "FIFA LIVE: Brazil vs Morocco",
+    name: "FIFA Live: Brazil vs Morocco",
     country: "CA",
-    countryName: "USA",
-    flag: "USA",
+    countryName: "Canada",
+    flag: "🇨🇦",
     categories: ["sports"],
     logo: "",
     streams: [],
