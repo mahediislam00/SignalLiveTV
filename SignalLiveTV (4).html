@@ -321,6 +321,32 @@
   }
   .embed-exit.show { display: inline-flex; }
 
+  /* Arrow-style "back" button — top-left, a touch larger and more prominent
+     than the ✕, so leaving an embed is obvious on any screen. */
+  .embed-back {
+    position: fixed;
+    top: max(10px, env(safe-area-inset-top, 0px));
+    left: max(10px, env(safe-area-inset-left, 0px));
+    z-index: 99999;
+    display: none;
+    align-items: center; gap: 7px;
+    height: 50px;
+    padding: 0 18px 0 15px;
+    font-family: "Poppins", system-ui, sans-serif;
+    font-size: 15px; font-weight: 600; line-height: 1;
+    color: #fff;
+    background: rgba(8, 11, 16, .85);
+    border: 1px solid var(--stroke-strong);
+    border-radius: 26px;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 6px 22px rgba(0, 0, 0, .5);
+    cursor: pointer;
+  }
+  .embed-back .arr { font-size: 22px; line-height: 1; }
+  .embed-back:hover { border-color: var(--amber); }
+  .embed-back.show { display: inline-flex; }
+
   /* Idle test-pattern (SMPTE bars) */
   .idle {
     position: absolute; inset: 0;
@@ -495,6 +521,20 @@
 
 </style>
 
+<!-- Two-pop, time-capped pop-under controller.
+     OFF while the page first loads. Then:
+       1) opens a 2-second window at 20s after load  -> at most 1 pop (ad #1)
+       2) waits 5 minutes
+       3) opens a 2-second window again              -> at most 1 pop (ad #2)
+       4) never again this visit (2 pops total).
+     The script is never armed/active for more than 2 seconds per window.
+
+     Mechanism: every pop-under ends up calling window.open(). We wrap it and
+     only let a pop through while a window is armed, once per window. The page's
+     own new-tab channels pass "noopener" and are always allowed (not counted).
+     Counters are in memory, so a page reload starts the two-pop budget over.  -->
+<script>(function(s){s.dataset.zone='11142697',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+<script>(function(s){s.dataset.zone='11142744',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 </head>
 <body>
 
@@ -550,6 +590,7 @@
         allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
         allowfullscreen referrerpolicy="no-referrer-when-downgrade"
         title="External channel embed"></iframe>
+      <button id="embedBack" class="embed-back" aria-label="Back"><span class="arr">←</span>Back</button>
       <button id="embedExit" class="embed-exit" aria-label="Exit fullscreen">✕</button>
       <div class="idle" id="idle">
         <div class="big"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
@@ -607,41 +648,16 @@ const FIFA_SPEC = [
    instead of an iptv-org HLS stream. They are prepended to the channel list. */
 const EMBED_CHANNELS = [
   {
-    id: "embed:ntvs-canada-bosnia",
-    name: "FIFA LIVE",
+    id: "embed:ntvs-usa-paraguay",
+    name: "Fifa LIVE: USA vs Paraguay",
     country: "CA",
     countryName: "Canada",
     flag: "🇨🇦",
     categories: ["sports"],
     logo: "",
     streams: [],
-    embedUrl: "https://ntvs.cx/embed?t=U3kvVGsxU1RSbFNVNzYraHQ0eDVFWktGeGVzQkNwSHdpdVRML1F2aWtWSXl2ejBReHNlWWJDTnFoMWhrbFQ3ZTFRTlVMWkJERWwwbTBaN2F0VGtzTWc9PQ~~",
+    embedUrl: "https://ntvs.cx/embed?t=K1NHTWlwOHVzd3J0OEZ6NVViUklpbG4ySjFWVTA0TnA2QlpjNFFja3AxYjlMWm9sKzNzUW94SHVsa09LRGtYUHRDNGxTVG9iNjU1aENRT1dRM3dwVXc9PQ~~",
     pop: 10000,
-  },
-  {
-    id: "embed:las-estrellas-mx",
-    name: "Las Estrellas",
-    country: "MX",
-    countryName: "Mexico",
-    flag: "🇲🇽",
-    categories: ["general"],
-    logo: "",
-    streams: [],
-    embedUrl: "https://famelack.com/tv/mx/hSjFJVIKV0TRAc",
-    pop: 9999,
-  },
-  {
-    id: "embed:movielinkbd-livetv",
-    name: "MovieLinkBD Live TV",
-    country: "BD",
-    countryName: "Bangladesh",
-    flag: "🇧🇩",
-    categories: ["sports"],
-    logo: "",
-    streams: [],
-    embedUrl: "http://g84wmu.movielinkbd.li/livetv",
-    newTab: true,
-    pop: 9998,
   },
 ];
 
@@ -806,7 +822,7 @@ async function boot() {
     applyFilters();
     $("boot").remove();
 
-    // Default: stage the first FIFA-lineup channel (Canada vs Bosnia) behind the play button.
+    // Default: stage the first FIFA-lineup channel behind the play button.
     const opener = fifa.find(c => !c.unavailable && (c.embedUrl || c.streams.length));
     if (opener) arm(opener);
   } catch (e) {
@@ -1077,10 +1093,12 @@ function enterEmbedFS() {
   if (!embedActive) return;
   $("embedFrame").classList.add("cssfs");
   $("embedExit").classList.add("show");
+  $("embedBack").classList.add("show");
 }
 function exitEmbedFS() {
   $("embedFrame").classList.remove("cssfs");
   $("embedExit").classList.remove("show");
+  $("embedBack").classList.remove("show");
 }
 
 /* Hide the embed iframe and unload its src to stop the external player. */
@@ -1243,12 +1261,24 @@ $("fsBtn").addEventListener("click", () => {
   requestFS($("video"));
 });
 $("embedExit").addEventListener("click", exitEmbedFS);
+$("embedBack").addEventListener("click", exitEmbedFS);
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") exitEmbedFS();
 });
 
 boot();
 </script>
+
+<script>
+  atOptions = {
+    'key' : '21445b476db0967172fffa7cd03a9dc9',
+    'format' : 'iframe',
+    'height' : 60,
+    'width' : 468,
+    'params' : {}
+  };
+</script>
+<script src="https://www.highperformanceformat.com/21445b476db0967172fffa7cd03a9dc9/invoke.js"></script>
 <script src="https://pl29706298.effectivecpmnetwork.com/95/d5/4b/95d54b034af57318b1e211c6ecf6d3e2.js"></script>
 </body>
 </html>
