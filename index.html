@@ -281,6 +281,31 @@
   }
   video { width: 100%; height: 100%; object-fit: contain; background: #000; }
 
+  /* Floating screenshot button — sits on the player, top-right, clear of
+     the browser's native control bar along the bottom. */
+  .shot-btn {
+    position: absolute;
+    top: 12px; right: 12px;
+    z-index: 7;
+    width: 40px; height: 40px;
+    display: none;
+    align-items: center; justify-content: center;
+    color: #fff;
+    background: rgba(8, 11, 16, .72);
+    border: 1px solid var(--stroke-strong);
+    border-radius: 50%;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    cursor: pointer;
+    transition: border-color .15s, background .15s, transform .12s;
+  }
+  .shot-btn.show { display: inline-flex; }
+  .shot-btn:hover { border-color: var(--amber); background: rgba(8, 11, 16, .9); }
+  .shot-btn:active { transform: scale(.92); }
+  .shot-btn:disabled { opacity: .7; cursor: default; }
+  .shot-btn.ok { border-color: var(--green); color: var(--green); }
+  .shot-btn.err { border-color: var(--red); color: var(--red); }
+
   /* External-embed channels (load a player page in an iframe) */
   .embedframe {
     position: absolute; inset: 0;
@@ -705,6 +730,12 @@
   <div class="stage">
     <div class="screen">
       <video id="video" controls playsinline></video>
+      <button id="shotBtn" class="shot-btn" aria-label="Take screenshot" title="Screenshot">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2L9 5h6l1.5 2h2A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5z"/>
+          <circle cx="12" cy="13" r="3.2"/>
+        </svg>
+      </button>
       <iframe id="embedFrame" class="embedframe"
         allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
         allowfullscreen referrerpolicy="no-referrer-when-downgrade"
@@ -724,6 +755,10 @@
         <div class="title">⚠ SIGNAL LOST</div>
         <div class="hint" id="errorHint">This stream appears to be offline or geo-blocked.</div>
         <button id="retryBtn">Try next source</button>
+      </div>
+      <div class="overlay" id="lockOverlay">
+        <div class="title">🔒 NOT YET LIVE</div>
+        <div class="hint" id="lockHint">This match hasn't unlocked yet.</div>
       </div>
     </div>
     <div class="nowbar">
@@ -768,6 +803,32 @@ const FIFA_SPEC = [
 const EMBED_CHANNELS = [
   {
     id: "embed1",
+    name: "FIFA Live: Scotland vs Morocco ",
+    country: "CA",
+    countryName: "Canada",
+    flag: "🇨🇦",
+    categories: ["sports"],
+    logo: "",
+    streams: [],
+    embedUrl: "https://mut.st/watch/scotland-vs-morocco/admin/1",
+    startLocal: "2026-06-20T04:00:00",   // TESTING: kickoff 4:00 AM BDT (Sat Jun 20) → unlocks 3:20 AM BDT (40 min before). PRODUCTION: real time is 2026-06-19T15:00:00 with MATCH_TZ_OFFSET "-08:00" (3:00 PM PST).
+    pop: 10000,
+  },
+  {
+    id: "embed3",
+    name: "FIFA Live: Brazil vs Haiti ",
+    country: "CA",
+    countryName: "Canada",
+    flag: "🇨🇦",
+    categories: ["sports"],
+    logo: "",
+    streams: [],
+    embedUrl: "https://mut.st/watch/brazil-vs-haiti/admin/3",
+    startLocal: "2026-06-20T06:30:00",   // TESTING: kickoff 6:30 AM BDT (Sat Jun 20) → unlocks 5:50 AM BDT (40 min before).
+    pop: 10000,
+  },
+  {
+    id: "embed4",
     name: "FIFA Live: USA vs Australia ",
     country: "CA",
     countryName: "Canada",
@@ -776,21 +837,105 @@ const EMBED_CHANNELS = [
     logo: "",
     streams: [],
     embedUrl: "https://mut.st/watch/usa-vs-australia/admin/1",
-    pop: 10000,
-  },
-  {
-    id: "embed2",
-    name: "FIFA Live 2: Czechia vs. South Africa",
-    country: "CA",
-    countryName: "Canada",
-    flag: "🇨🇦",
-    categories: ["sports"],
-    logo: "",
-    streams: [],
-    embedUrl: "https://ntvs.cx/embed?t=U3kvVGsxU1RSbFNVNzYraHQ0eDVFWktGeGVzQkNwSHdpdVRML1F2aWtWSXByYlVEc24yaG0xTmRESHFGczgveGJFVlIxM1VOYVFpV0V1Qlgra1lxTUE9PQ~~",
+    startLocal: "2026-06-20T01:00:00",   // TESTING: kickoff 1:00 AM BDT (Sat Jun 20) — already running now; clears 40 min after it ends.
     pop: 10000,
   },
 ];
+
+/* ---------- Scheduled-embed activation ----------------------------------
+   An embed channel may carry a `startLocal` kickoff time, formatted
+   "YYYY-MM-DDTHH:MM:SS". The channel stays LOCKED until ACTIVATION_LEAD_MS
+   before that kickoff, then unlocks automatically — no reload needed (see the
+   ticker near the bottom of this script). Channels with no `startLocal` are
+   never locked, so existing always-on embeds keep working unchanged.
+
+   Times are read in MATCH_TZ_OFFSET. The listings are labelled PST (-08:00);
+   if you publish PDT/summer times instead, change this to "-07:00". */
+const MATCH_TZ_OFFSET    = "+06:00";          // TESTING: BDT. (Restore "-08:00" PST / "-07:00" PDT for production.)
+const ACTIVATION_LEAD_MS = 40 * 60 * 1000;    // unlock 40 minutes before kickoff
+const MATCH_DURATION_MS  = 150 * 60 * 1000;   // assumed broadcast length (kickoff → final whistle). Lower for a fast removal test.
+const POST_END_GRACE_MS  = 30 * 60 * 1000;    // stays watchable until 40 min after the match ends
+const QUEUE_SIZE         = 3;                  // how many upcoming matches to keep queued in the FIFA list
+
+function matchStartMs(ch) {
+  if (!ch || !ch.startLocal) return NaN;
+  return Date.parse(ch.startLocal + MATCH_TZ_OFFSET);
+}
+/* Lifecycle for a scheduled embed match:
+     queued  : before unlock (kickoff − 40m)        → shown locked, with countdown
+     live    : unlock .. end+grace                   → unlocked & playable ("🔴 live", then "ended · clears in …")
+     removed : after end + 40m                       → dropped from the FIFA list
+   Channels with no `startLocal` are always "live" (scheduled:false) and never removed. */
+function embedStatus(ch) {
+  const startMs = matchStartMs(ch);
+  if (isNaN(startMs)) {
+    return { scheduled: false, locked: false, removed: false, phase: "live",
+             startMs: NaN, unlockMs: NaN, endMs: NaN, removeMs: NaN };
+  }
+  const unlockMs = startMs - ACTIVATION_LEAD_MS;
+  const endMs    = startMs + MATCH_DURATION_MS;
+  const removeMs = endMs + POST_END_GRACE_MS;
+  const now = Date.now();
+  let phase;
+  if (now < unlockMs)      phase = "queued";
+  else if (now < removeMs) phase = "live";
+  else                     phase = "removed";
+  return { scheduled: true, locked: phase === "queued", removed: phase === "removed",
+           ended: now >= endMs, phase, startMs, unlockMs, endMs, removeMs };
+}
+/* Sub-label shown for an embed channel given its status. */
+function embedSubText(c, st) {
+  const now = Date.now();
+  if (!st.scheduled)        return `${c.flag} ${c.countryName} · live embed`;
+  if (st.phase === "queued") return `${c.flag} ${c.countryName} · 🔒 in ${fmtCountdown(st.unlockMs - now)}`;
+  if (st.phase === "live")   return now < st.endMs
+    ? `${c.flag} ${c.countryName} · 🔴 live`
+    : `${c.flag} ${c.countryName} · ended · clears in ${fmtCountdown(st.removeMs - now)}`;
+  return `${c.flag} ${c.countryName} · ended`;
+}
+/* The FIFA list, time-filtered: all live matches first (earliest kickoff first),
+   then up to QUEUE_SIZE upcoming matches; finished matches (past their grace)
+   are dropped entirely. Non-scheduled embeds are always shown, after the matches. */
+function visibleFifa() {
+  const key = c => { const s = matchStartMs(c); return isNaN(s) ? Infinity : s; };
+  const live = [], queued = [];
+  fifa.forEach(c => {
+    if (!c.embedUrl) { live.push(c); return; }   // disabled/spec slots: leave in place
+    const st = embedStatus(c);
+    if (!st.scheduled) { live.push(c); return; }  // always-on embed
+    if (st.removed) return;                        // finished + grace elapsed → gone
+    (st.phase === "live" ? live : queued).push(c);
+  });
+  live.sort((a, b) => key(a) - key(b));
+  queued.sort((a, b) => key(a) - key(b));
+  return live.concat(queued.slice(0, QUEUE_SIZE));
+}
+/* Signature of the visible FIFA set + each match's phase — lets the ticker
+   tell when a row must be added/removed (vs. just a countdown ticking). */
+function fifaSig() {
+  return visibleFifa().map(c => c.id + ":" + embedStatus(c).phase).join("|");
+}
+function fmtCountdown(ms) {
+  if (ms <= 0) return "moments";
+  const s = Math.floor(ms / 1000);
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${sec}s`;
+  return `${sec}s`;
+}
+function fmtMatchTime(ms) {
+  if (isNaN(ms)) return "TBD";
+  try {
+    return new Date(ms).toLocaleString([], {
+      weekday: "short", month: "short", day: "numeric",
+      hour: "numeric", minute: "2-digit"
+    });
+  } catch (e) { return new Date(ms).toString(); }
+}
 
 /* ---------- Emoji maps ---------- */
 const CAT_EMOJI = {
@@ -951,10 +1096,12 @@ async function boot() {
     buildFilterOptions();
     $("totalCount").textContent = channels.length.toLocaleString();
     applyFilters();
+    lastFifaSig = fifaSig();
     $("boot").remove();
 
-    // Default: stage the first FIFA-lineup channel behind the play button.
-    const opener = fifa.find(c => !c.unavailable && (c.embedUrl || c.streams.length));
+    // Default: stage the first currently-live FIFA channel behind the play button.
+    const vis = visibleFifa();
+    const opener = vis.find(c => c.embedUrl) || vis[0];
     if (opener) arm(opener);
   } catch (e) {
     $("bootmsg").innerHTML =
@@ -1049,7 +1196,7 @@ function applyFilters() {
   const clean = !q && !co && !cat;
   const useFifa = scope === "fifa" && clean;
   const useBD = scope === "bd" && clean;
-  const base = useFifa ? fifa : useBD ? bangladesh : channels;
+  const base = useFifa ? visibleFifa() : useBD ? bangladesh : channels;
 
   filtered = base.filter(c =>
     (!q || c.name.toLowerCase().includes(q)) &&
@@ -1096,13 +1243,15 @@ function cap(s) { return s ? s[0].toUpperCase() + s.slice(1) : ""; }
 function rowHTML(c, idx) {
   const emoji = c.fifaLabel ? "⚽" : catEmoji(c);
   const active = current && c.id === current.id ? " active" : "";
-  const dim = c.unavailable ? " dim" : "";
+  const est = c.embedUrl ? embedStatus(c) : null;
+  const locked = !!(est && est.locked);
+  const dim = (c.unavailable || locked) ? " dim" : "";
   const sub = c.unavailable
     ? `${c.flag} ${c.countryName} · no public stream right now`
     : c.newTab
       ? `${c.flag} ${c.countryName} · New Tab`
       : c.embedUrl
-        ? `${c.flag} ${c.countryName} · live embed`
+        ? embedSubText(c, est)
         : [
             c.flag,
             c.countryName,
@@ -1166,10 +1315,11 @@ function paintActive() {
 }
 
 /* ---------- Playback ---------- */
-function setOverlays({ loading = false, error = false, play = false, hint = "" }) {
+function setOverlays({ loading = false, error = false, play = false, locked = false, hint = "" }) {
   $("loadingOverlay").classList.toggle("show", loading);
   $("errorOverlay").classList.toggle("show", error);
   $("playOverlay").classList.toggle("show", play);
+  $("lockOverlay").classList.toggle("show", locked);
   if (hint) $("errorHint").textContent = hint;
 }
 
@@ -1179,12 +1329,60 @@ function arm(channel) {
   current = channel;
   srcIndex = 0;
   paintActive();
+  // A scheduled embed that hasn't unlocked yet → show the lock/countdown screen.
+  if (channel.embedUrl) {
+    const st = embedStatus(channel);
+    if (st.locked) { showEmbedLocked(channel, st); return; }
+  }
   $("nowIcon").textContent = channel.fifaLabel ? "⚽" : catEmoji(channel);
   $("nowName").textContent = channel.name;
   $("nowSub").textContent = `${channel.flag} ${channel.countryName} · press play to start`;
   $("srcBtn").style.display = "none";
   $("onair").classList.remove("live");
   setOverlays({ play: true });   // SMPTE bars stay visible behind the button
+}
+
+/* Render the lock screen for an embed whose match hasn't unlocked yet. */
+function updateLockHint(channel, st) {
+  $("lockHint").innerHTML =
+    `<b>${esc(channel.name.trim())}</b> goes live 40 minutes before kickoff.<br>` +
+    `Kickoff: <b>${esc(fmtMatchTime(st.startMs))}</b> (your local time)<br>` +
+    `Unlocks in <b>${esc(fmtCountdown(st.unlockMs - Date.now()))}</b>.`;
+}
+function showEmbedLocked(channel, st) {
+  current = channel;
+  srcIndex = 0;
+  showShot(false);
+  paintActive();
+  hideEmbed();
+  if (hls) { hls.destroy(); hls = null; }
+  const v = $("video"); v.removeAttribute("src"); v.load();
+  $("idle").style.display = "none";
+  $("onair").classList.remove("live");
+  $("nowIcon").textContent = "🔒";
+  $("nowName").textContent = channel.name;
+  $("nowSub").textContent =
+    `${channel.flag} ${channel.countryName} · 🔒 unlocks in ${fmtCountdown(st.unlockMs - Date.now())}`;
+  $("srcBtn").style.display = "none";
+  updateLockHint(channel, st);
+  setOverlays({ locked: true });
+}
+
+/* Reset the player to the idle test pattern (e.g. when the current match expires). */
+function showIdle() {
+  current = null;
+  showShot(false);
+  hideEmbed();
+  if (hls) { hls.destroy(); hls = null; }
+  const v = $("video"); v.removeAttribute("src"); v.load();
+  $("idle").style.display = "";
+  $("onair").classList.remove("live");
+  $("nowIcon").textContent = "📺";
+  $("nowName").textContent = "Nothing playing";
+  $("nowSub").textContent = "Select a channel from the guide";
+  $("srcBtn").style.display = "none";
+  setOverlays({});
+  paintActive();
 }
 
 /* Try to start playback; if the browser blocks it, fall back to the play button. */
@@ -1198,6 +1396,7 @@ function attemptPlay(video) {
 /* Show an external player page in the iframe (no HLS stream). */
 function playEmbed(channel) {
   embedActive = true;
+  showShot(false);
   paintActive();
   $("idle").style.display = "none";
   setOverlays({});                      // hide play / loading / error overlays
@@ -1256,11 +1455,18 @@ function play(channel, sourceIdx = 0) {
   srcIndex = sourceIdx;
 
   // External-embed channels bypass the HLS pipeline entirely.
-  if (channel.embedUrl) { playEmbed(channel); return; }
+  if (channel.embedUrl) {
+    const st = embedStatus(channel);
+    if (st.locked)  { showEmbedLocked(channel, st); return; }
+    if (st.removed) { showIdle(); return; }     // match has expired off the list
+    playEmbed(channel);
+    return;
+  }
 
   const video = $("video");
 
   paintActive();
+  showShot(false);                      // hide until the new stream is actually playing
   hideEmbed();                          // leaving an embed channel? stop its player
   $("idle").style.display = "none";
   $("nowIcon").textContent = channel.fifaLabel ? "⚽" : catEmoji(channel);
@@ -1291,6 +1497,7 @@ function play(channel, sourceIdx = 0) {
   video.onplaying = () => {
     setOverlays({ loading: false, error: false });
     $("onair").classList.add("live");
+    showShot(true);
   };
 
   if (Hls.isSupported()) {
@@ -1319,6 +1526,7 @@ function play(channel, sourceIdx = 0) {
 
 function failStream() {
   if (hls) { hls.destroy(); hls = null; }
+  showShot(false);
   $("onair").classList.remove("live");
   const remaining = current ? current.streams.length - srcIndex - 1 : 0;
   setOverlays({
@@ -1391,11 +1599,115 @@ $("fsBtn").addEventListener("click", () => {
   }
   requestFS($("video"));
 });
+/* Capture the current video frame and download it as a PNG.
+   Works for hls.js streams (fed via MSE, so the canvas isn't tainted).
+   Native-HLS playback (Safari) may taint the canvas cross-origin and
+   throw on export; iframe embeds can't be read at all. Both are caught. */
+/* Show/hide the floating screenshot button (only meaningful while an HLS
+   stream is actually rendering frames — not for idle/embed/error states). */
+function showShot(on) {
+  $("shotBtn").classList.toggle("show", !!on);
+}
+
+/* Brief icon feedback: green tick on success, red on failure. */
+function shotFeedback(ok) {
+  const btn = $("shotBtn");
+  btn.classList.add(ok ? "ok" : "err");
+  setTimeout(() => btn.classList.remove("ok", "err"), 1200);
+}
+
+function takeScreenshot() {
+  if (embedActive || (current && current.embedUrl)) { shotFeedback(false); return; }
+
+  const video = $("video");
+  const w = video.videoWidth, h = video.videoHeight;
+  if (!w || !h) { shotFeedback(false); return; }
+
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    canvas.getContext("2d").drawImage(video, 0, 0, w, h);
+
+    const name = (current && current.name ? current.name : "signal")
+      .replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "signal";
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    const filename = `signal-${name}-${stamp}.png`;
+
+    const trigger = url => {
+      const a = document.createElement("a");
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+    };
+
+    if (canvas.toBlob) {
+      canvas.toBlob(blob => {
+        if (!blob) { shotFeedback(false); return; }
+        const url = URL.createObjectURL(blob);
+        trigger(url);
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+        shotFeedback(true);
+      }, "image/png");
+    } else {
+      trigger(canvas.toDataURL("image/png"));
+      shotFeedback(true);
+    }
+  } catch (err) {
+    // SecurityError → cross-origin tainted canvas (typically native HLS)
+    shotFeedback(false);
+  }
+}
+$("shotBtn").addEventListener("click", takeScreenshot);
 $("embedExit").addEventListener("click", exitEmbedFS);
 $("embedBack").addEventListener("click", exitEmbedFS);
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") exitEmbedFS();
 });
+
+/* Tracks the visible FIFA set + phases so the ticker knows when to re-render. */
+let lastFifaSig = "";
+
+/* Tick once a second: refresh countdowns, auto-unlock matches, add/drop rows as
+   matches go live or expire, and advance off a match that has just been removed —
+   all without a reload. */
+function tickEmbeds() {
+  const now = Date.now();
+
+  // Staged / now-playing channel
+  if (current && current.embedUrl) {
+    const st = embedStatus(current);
+    if (st.removed) {
+      // Current match expired off the list → jump to the next live one, else idle.
+      const next = visibleFifa().find(c => c.embedUrl && c.id !== current.id);
+      if (next) arm(next); else showIdle();
+    } else if (st.locked) {
+      $("nowSub").textContent =
+        `${current.flag} ${current.countryName} · 🔒 unlocks in ${fmtCountdown(st.unlockMs - now)}`;
+      if ($("lockOverlay").classList.contains("show")) updateLockHint(current, st);
+    } else if ($("lockOverlay").classList.contains("show")) {
+      arm(current);   // just unlocked while the lock screen was up → offer Play
+    } else if (embedActive && st.scheduled) {
+      // Keep the now-bar fresh while an embed plays ("🔴 live" → "ended · clears in …").
+      $("nowSub").textContent = embedSubText(current, st);
+    }
+  }
+
+  // A match went live / expired / the queue shifted → rebuild the FIFA list.
+  if (scope === "fifa") {
+    const sig = fifaSig();
+    if (sig !== lastFifaSig) { lastFifaSig = sig; applyFilters(); }
+  }
+
+  // Refresh the countdown / status text on the visible rows in place.
+  vp.querySelectorAll(".ch").forEach(el => {
+    const c = filtered[+el.dataset.idx];
+    if (!c || !c.embedUrl) return;
+    const st = embedStatus(c);
+    el.classList.toggle("dim", st.locked);
+    const subEl = el.querySelector(".sub");
+    if (subEl) subEl.textContent = embedSubText(c, st);
+  });
+}
+setInterval(tickEmbeds, 1000);
 
 boot();
 </script>
