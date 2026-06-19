@@ -811,11 +811,11 @@ const EMBED_CHANNELS = [
     logo: "",
     streams: [],
     embedUrl: "https://mut.st/watch/scotland-vs-morocco/admin/1",
-    startLocal: "2026-06-20T04:00:00",   // TESTING: kickoff 4:00 AM BDT (Sat Jun 20) → unlocks 3:20 AM BDT (40 min before). PRODUCTION: real time is 2026-06-19T15:00:00 with MATCH_TZ_OFFSET "-08:00" (3:00 PM PST).
+    startLocal: "2026-06-19T15:00:00",   // 3:00 PM PDT Fri Jun 19 → 4:00 AM BDT Sat Jun 20
     pop: 10000,
   },
   {
-    id: "embed3",
+    id: "embed2",
     name: "FIFA Live: Brazil vs Haiti ",
     country: "CA",
     countryName: "Canada",
@@ -824,20 +824,202 @@ const EMBED_CHANNELS = [
     logo: "",
     streams: [],
     embedUrl: "https://mut.st/watch/brazil-vs-haiti/admin/3",
-    startLocal: "2026-06-20T06:30:00",   // TESTING: kickoff 6:30 AM BDT (Sat Jun 20) → unlocks 5:50 AM BDT (40 min before).
+    startLocal: "2026-06-19T17:30:00",   // 5:30 PM PDT Fri Jun 19 → 6:30 AM BDT Sat Jun 20
     pop: 10000,
   },
   {
-    id: "embed4",
-    name: "FIFA Live: USA vs Australia ",
+    id: "embed3",
+    name: "FIFA Live: Türkiye vs Paraguay ",
     country: "CA",
     countryName: "Canada",
     flag: "🇨🇦",
     categories: ["sports"],
     logo: "",
     streams: [],
-    embedUrl: "https://mut.st/watch/usa-vs-australia/admin/1",
-    startLocal: "2026-06-20T01:00:00",   // TESTING: kickoff 1:00 AM BDT (Sat Jun 20) — already running now; clears 40 min after it ends.
+    embedUrl: "https://mut.st/watch/trkiye-vs-paraguay/admin/1",
+    startLocal: "2026-06-19T20:00:00",   // 8:00 PM PDT Fri Jun 19 → 9:00 AM BDT Sat Jun 20
+    pop: 10000,
+  },
+  {
+    id: "embed4",
+    name: "FIFA Live: Netherlands vs Sweden ",
+    country: "CA",
+    countryName: "Canada",
+    flag: "🇨🇦",
+    categories: ["sports"],
+    logo: "",
+    streams: [],
+    embedUrl: "https://mut.st/watch/netherlands-vs-sweden/admin/1",
+    startLocal: "2026-06-20T10:00:00",   // 10:00 AM PDT Sat Jun 20 → 11:00 PM BDT Sat Jun 20
+    pop: 10000,
+  },
+  {
+    id: "embed5",
+    name: "FIFA Live: Almería vs Málaga ",
+    country: "CA",
+    countryName: "Canada",
+    flag: "🇨🇦",
+    categories: ["sports"],
+    logo: "",
+    streams: [],
+    embedUrl: "https://mut.st/watch/almeria-vs-malaga/admin/1",
+    startLocal: "2026-06-20T12:00:00",   // 12:00 PM PDT Sat Jun 20 → 1:00 AM BDT Sun Jun 21
+    pop: 10000,
+  },
+  {
+    id: "embed6",
+    name: "FIFA Live: Almería vs Málaga ",
+    country: "CA",
+    countryName: "Canada",
+    flag: "🇨🇦",
+    categories: ["sports"],
+    logo: "",
+    streams: [],
+    embedUrl: "https://mut.st/watch/almera-vs-mlaga/admin/1",
+    startLocal: "2026-06-20T12:00:00",   // 12:00 PM PDT Sat Jun 20 → 1:00 AM BDT Sun Jun 21
+    pop: 10000,
+  },
+  {
+    id: "embed7",
+    name: "FIFA Live: Germany vs Ivory Coast ",
+    country: "CA",
+    countryName: "Canada",
+    flag: "🇨🇦",
+    categories: ["sports"],
+    logo: "",
+    streams: [],
+    embedUrl: "https://mut.st/watch/germany-vs-ivory-coast/admin/1",
+    startLocal: "2026-06-20T13:00:00",   // 1:00 PM PDT Sat Jun 20 → 2:00 AM BDT Sun Jun 21
+    pop: 10000,
+  },
+  {
+    id: "embed8",
+    name: "FIFA Live: Ecuador vs Curaçao ",
+    country: "CA",
+    countryName: "Canada",
+    flag: "🇨🇦",
+    categories: ["sports"],
+    logo: "",
+    streams: [],
+    embedUrl: "https://mut.st/watch/ecuador-vs-curaao/admin/1",
+    startLocal: "2026-06-20T17:00:00",   // 5:00 PM PDT Sat Jun 20 → 6:00 AM BDT Sun Jun 21
+    pop: 10000,
+  },
+  {
+    id: "embed9",
+    name: "FIFA Live: Tunisia vs Japan ",
+    country: "CA",
+    countryName: "Canada",
+    flag: "🇨🇦",
+    categories: ["sports"],
+    logo: "",
+    streams: [],
+    embedUrl: "https://mut.st/watch/tunisia-japan/admin/1",
+    startLocal: "2026-06-20T21:00:00",   // 9:00 PM PDT Sat Jun 20 → 10:00 AM BDT Sun Jun 21
+    pop: 10000,
+  },
+  {
+    id: "embed10",
+    name: "FIFA Live: Spain vs Saudi Arabia ",
+    country: "CA",
+    countryName: "Canada",
+    flag: "🇨🇦",
+    categories: ["sports"],
+    logo: "",
+    streams: [],
+    embedUrl: "https://mut.st/watch/spain-saudi-arabia/admin/1",
+    startLocal: "2026-06-21T09:00:00",   // 9:00 AM PDT Sun Jun 21 → 10:00 PM BDT Sun Jun 21
+    pop: 10000,
+  },
+  {
+    id: "embed11",
+    name: "FIFA Live: Belgium vs Iran ",
+    country: "CA",
+    countryName: "Canada",
+    flag: "🇨🇦",
+    categories: ["sports"],
+    logo: "",
+    streams: [],
+    embedUrl: "https://mut.st/watch/belgium-iran/admin/1",
+    startLocal: "2026-06-21T12:00:00",   // 12:00 PM PDT Sun Jun 21 → 1:00 AM BDT Mon Jun 22
+    pop: 10000,
+  },
+  {
+    id: "embed12",
+    name: "FIFA Live: Uruguay vs Cape Verde ",
+    country: "CA",
+    countryName: "Canada",
+    flag: "🇨🇦",
+    categories: ["sports"],
+    logo: "",
+    streams: [],
+    embedUrl: "https://mut.st/watch/uruguay-cape-verde/admin/1",
+    startLocal: "2026-06-21T15:00:00",   // 3:00 PM PDT Sun Jun 21 → 4:00 AM BDT Mon Jun 22
+    pop: 10000,
+  },
+  {
+    id: "embed13",
+    name: "FIFA Live: New Zealand vs Egypt ",
+    country: "CA",
+    countryName: "Canada",
+    flag: "🇨🇦",
+    categories: ["sports"],
+    logo: "",
+    streams: [],
+    embedUrl: "https://mut.st/watch/new-zealand-egypt/admin/1",
+    startLocal: "2026-06-21T18:00:00",   // 6:00 PM PDT Sun Jun 21 → 7:00 AM BDT Mon Jun 22
+    pop: 10000,
+  },
+  {
+    id: "embed14",
+    name: "FIFA Live: Argentina vs Austria ",
+    country: "CA",
+    countryName: "Canada",
+    flag: "🇨🇦",
+    categories: ["sports"],
+    logo: "",
+    streams: [],
+    embedUrl: "https://mut.st/watch/argentina-austria/admin/1",
+    startLocal: "2026-06-22T10:00:00",   // 10:00 AM PDT Mon Jun 22 → 11:00 PM BDT Mon Jun 22
+    pop: 10000,
+  },
+  {
+    id: "embed15",
+    name: "FIFA Live: France vs Iraq ",
+    country: "CA",
+    countryName: "Canada",
+    flag: "🇨🇦",
+    categories: ["sports"],
+    logo: "",
+    streams: [],
+    embedUrl: "https://mut.st/watch/france-iraq/admin/1",
+    startLocal: "2026-06-22T14:00:00",   // 2:00 PM PDT Mon Jun 22 → 3:00 AM BDT Tue Jun 23
+    pop: 10000,
+  },
+  {
+    id: "embed16",
+    name: "FIFA Live: Norway vs Senegal ",
+    country: "CA",
+    countryName: "Canada",
+    flag: "🇨🇦",
+    categories: ["sports"],
+    logo: "",
+    streams: [],
+    embedUrl: "https://mut.st/watch/norway-senegal/admin/1",
+    startLocal: "2026-06-22T17:00:00",   // 5:00 PM PDT Mon Jun 22 → 6:00 AM BDT Tue Jun 23
+    pop: 10000,
+  },
+  {
+    id: "embed17",
+    name: "FIFA Live: Jordan vs Algeria ",
+    country: "CA",
+    countryName: "Canada",
+    flag: "🇨🇦",
+    categories: ["sports"],
+    logo: "",
+    streams: [],
+    embedUrl: "https://mut.st/watch/jordan-algeria/admin/1",
+    startLocal: "2026-06-22T20:00:00",   // 8:00 PM PDT Mon Jun 22 → 9:00 AM BDT Tue Jun 23
     pop: 10000,
   },
 ];
@@ -851,21 +1033,22 @@ const EMBED_CHANNELS = [
 
    Times are read in MATCH_TZ_OFFSET. The listings are labelled PST (-08:00);
    if you publish PDT/summer times instead, change this to "-07:00". */
-const MATCH_TZ_OFFSET    = "+06:00";          // TESTING: BDT. (Restore "-08:00" PST / "-07:00" PDT for production.)
+const MATCH_TZ_OFFSET    = "-07:00";          // PDT — June is daylight saving on the US West Coast (13h behind BDT). Use "-08:00" only in PST/winter months.
 const ACTIVATION_LEAD_MS = 40 * 60 * 1000;    // unlock 40 minutes before kickoff
 const MATCH_DURATION_MS  = 150 * 60 * 1000;   // assumed broadcast length (kickoff → final whistle). Lower for a fast removal test.
 const POST_END_GRACE_MS  = 30 * 60 * 1000;    // stays watchable until 40 min after the match ends
-const QUEUE_SIZE         = 3;                  // how many upcoming matches to keep queued in the FIFA list
+const QUEUE_SIZE         = 2;                  // how many upcoming matches to keep queued, in addition to any live ones
 
 function matchStartMs(ch) {
   if (!ch || !ch.startLocal) return NaN;
   return Date.parse(ch.startLocal + MATCH_TZ_OFFSET);
 }
 /* Lifecycle for a scheduled embed match:
-     queued  : before unlock (kickoff − 40m)        → shown locked, with countdown
-     live    : unlock .. end+grace                   → unlocked & playable ("🔴 live", then "ended · clears in …")
-     removed : after end + 40m                       → dropped from the FIFA list
-   Channels with no `startLocal` are always "live" (scheduled:false) and never removed. */
+     queued  : before kickoff                         → playable, shown with a "starts in …" countdown
+     live    : unlock .. end+grace                    → playable ("🔴 live", then "ended · clears in …")
+     removed : after end + grace                      → dropped from the FIFA list
+   Channels with no `startLocal` are always "live" (scheduled:false) and never removed.
+   Note: matches are never locked — streams open immediately even before kickoff. */
 function embedStatus(ch) {
   const startMs = matchStartMs(ch);
   if (isNaN(startMs)) {
@@ -880,22 +1063,25 @@ function embedStatus(ch) {
   if (now < unlockMs)      phase = "queued";
   else if (now < removeMs) phase = "live";
   else                     phase = "removed";
-  return { scheduled: true, locked: phase === "queued", removed: phase === "removed",
+  return { scheduled: true, locked: false, removed: phase === "removed",
            ended: now >= endMs, phase, startMs, unlockMs, endMs, removeMs };
 }
 /* Sub-label shown for an embed channel given its status. */
 function embedSubText(c, st) {
   const now = Date.now();
   if (!st.scheduled)        return `${c.flag} ${c.countryName} · live embed`;
-  if (st.phase === "queued") return `${c.flag} ${c.countryName} · 🔒 in ${fmtCountdown(st.unlockMs - now)}`;
+  if (st.phase === "queued") return `${c.flag} ${c.countryName} · starts in ${fmtCountdown(st.startMs - now)}`;
   if (st.phase === "live")   return now < st.endMs
     ? `${c.flag} ${c.countryName} · 🔴 live`
     : `${c.flag} ${c.countryName} · ended · clears in ${fmtCountdown(st.removeMs - now)}`;
   return `${c.flag} ${c.countryName} · ended`;
 }
-/* The FIFA list, time-filtered: all live matches first (earliest kickoff first),
-   then up to QUEUE_SIZE upcoming matches; finished matches (past their grace)
-   are dropped entirely. Non-scheduled embeds are always shown, after the matches. */
+/* The FIFA list, time-filtered: all live matches first (earliest kickoff
+   first), then the next QUEUE_SIZE upcoming matches. Live matches are never
+   dropped to make room — the upcoming queue is always kept on top of them, so
+   when two are live you still see the next two upcoming. Finished matches (past
+   their grace) are dropped entirely, and the queue refills automatically as
+   matches clear. Non-scheduled embeds are always shown, after the matches. */
 function visibleFifa() {
   const key = c => { const s = matchStartMs(c); return isNaN(s) ? Infinity : s; };
   const live = [], queued = [];
