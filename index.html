@@ -800,7 +800,8 @@ const FIFA_SPEC = [
 
 /* Curated embed channels — these load an external player page in an iframe
    instead of an iptv-org HLS stream. They are prepended to the channel list. */
-{
+const EMBED_CHANNELS = [
+  {
     "id": "embed40",
     "name": "Panama vs England",
     "country": "CA",
@@ -995,6 +996,7 @@ const FIFA_SPEC = [
     "startLocal": "2026-06-30T18:00:00",
     "pop": 10000
   }
+]
 
 /* ---------- Scheduled-embed activation ----------------------------------
    An embed channel may carry a `startLocal` kickoff time, formatted
